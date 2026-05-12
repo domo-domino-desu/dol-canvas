@@ -1,6 +1,6 @@
 {
   "name": "dol-canvas",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Degrees of Lewdity style canvas character renderer with a Chinese payload API.",
   "workspaces": [
     "demo"
