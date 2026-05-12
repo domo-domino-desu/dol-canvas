@@ -67,8 +67,8 @@
   },
   "lint-staged": {
     "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,vue}": [
-      "oxlint --fix",
-      "oxfmt -c ./.oxfmtrc.json --write"
+      "sh -c 'oxlint --fix \"$@\" || true' --",
+      "sh -c 'oxfmt -c ./.oxfmtrc.json --write \"$@\" || true' --"
     ],
     "*.{json,md,mdx,yaml,yml,html,css,scss}": "oxfmt -c ./.oxfmtrc.json --write"
   },

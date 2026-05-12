@@ -4,3 +4,4 @@ if [ -f .githooks/pre-commit ]; then
 fi
 
 bun run lint-staged
+bun run build
