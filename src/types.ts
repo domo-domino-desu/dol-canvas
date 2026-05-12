@@ -5,6 +5,7 @@ export interface ColorFilter {
   blend?: string; // hex color, e.g. "#f53d43"
   blendMode?: string; // canvas composite op, default "hard-light"
   brightness?: number; // -1..1  (negative = darker, positive = lighter)
+  contrast?: number; // 1 = unchanged
 }
 
 // ── Layer spec ───────────────────────────────────────────────────────────────
@@ -42,11 +43,9 @@ export interface HairPayload {
   发型?: string;
   刘海?: string;
   长度?: HairLength;
-  刘海长度?: HairLength;
 }
 
 export interface EyePayload {
-  瞳色?: string;
   左眼瞳色?: string;
   右眼瞳色?: string;
   无神?: boolean;
@@ -57,8 +56,6 @@ export interface EyePayload {
 
 export interface ClothingWorn {
   名称: string;
-  颜色?: string; // CN color name from colors.json clothes section
-  第二颜色?: string;
   主色调?: string;
   第二色调?: string;
   状态?: ClothingState; // default "full"
@@ -96,11 +93,9 @@ export interface CharacterPayload {
   发色?: string; // CN name from colors.json hair
   发长?: HairLength; // default "肩"
   刘海?: string; // CN name from hair.json fringeStyles
-  刘海长度?: HairLength; // default same as 发长
 
   // ── 面容 ──────────────────────────────────────────────────────────────────
   仪态?: string; // CN name: 温柔/高冷/妩媚/甜美/勾人/忧郁
-  瞳色?: string; // CN eye color
   眼睛?: EyePayload;
   眉毛?: "低" | "中" | "高" | "高潮"; // brow position, default "中"
   嘴部?: "平静" | "微笑" | "皱眉" | "哭泣" | "咀嚼"; // mouth variant

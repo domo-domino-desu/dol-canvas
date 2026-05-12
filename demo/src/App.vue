@@ -12,10 +12,33 @@
     </section>
 
     <aside class="panel">
-      <label class="toggle">
-        <input v-model="animate" type="checkbox" />
-        <span>动画</span>
-      </label>
+      <div class="toolbar">
+        <label class="toggle">
+          <input v-model="animate" type="checkbox" />
+          <span>动画</span>
+        </label>
+
+        <a
+          class="icon-button"
+          href="https://github.com/domo-domino-desu/dol-canvas"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.36 6.84 9.72.5.1.68-.22.68-.5v-1.9c-2.78.62-3.37-1.22-3.37-1.22-.45-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.29 9.29 0 0 1 12 6.93c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.57 5.06.36.32.68.95.68 1.92v2.84c0 .28.18.6.69.5A10.13 10.13 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"
+            />
+          </svg>
+        </a>
+      </div>
+
+      <div class="actions">
+        <button type="button" @click="copyPayloadToClipboard">复制到剪贴板</button>
+        <button type="button" @click="importPayloadFromClipboard">从剪贴板导入</button>
+      </div>
 
       <details open>
         <summary>资源</summary>
@@ -24,6 +47,8 @@
             <label for="import-source">导入</label>
             <input id="import-source" :value="importSourceLabel" readonly />
           </div>
+
+          <p v-if="clipboardStatus" class="status">{{ clipboardStatus }}</p>
 
           <div class="field">
             <label for="image-source">图片</label>
@@ -142,15 +167,6 @@
               </option>
             </select>
           </div>
-
-          <div class="field">
-            <label for="fringe-length">刘海长度</label>
-            <select id="fringe-length" v-model="fringeLength">
-              <option v-for="length in hairLengths" :key="length" :value="length">
-                {{ length }}
-              </option>
-            </select>
-          </div>
         </div>
       </details>
 
@@ -259,7 +275,7 @@
                 </div>
 
                 <div class="field">
-                  <label :for="`${slot.key}-color`">颜色</label>
+                  <label :for="`${slot.key}-color`">主色调</label>
                   <select :id="`${slot.key}-color`" v-model="clothing[slot.key].color">
                     <option value="">默认</option>
                     <option
@@ -274,7 +290,7 @@
               </div>
 
               <div v-if="selectedClothing(slot.key)?.hasAcc" class="field">
-                <label :for="`${slot.key}-acc-color`">第二颜色</label>
+                <label :for="`${slot.key}-acc-color`">第二色调</label>
                 <select :id="`${slot.key}-acc-color`" v-model="clothing[slot.key].secondColor">
                   <option value="">默认</option>
                   <option
@@ -377,6 +393,7 @@ type TransformDetailField = keyof NonNullable<CharacterPayload["转化细节"]>;
 
 const animate = ref(true);
 const lastError = ref("");
+const clipboardStatus = ref("");
 
 const bodyShapes = Object.keys(i18nData.bodyShapes) as BodyShape[];
 const hairLengths = Object.keys(i18nData.hairLengths) as HairLength[];
@@ -396,17 +413,16 @@ const penisState = ref<"soft" | "hard">("soft");
 const penisSize = ref(2);
 const hasBalls = ref(true);
 
-const hairStyle = ref("散发");
-const hairColor = ref("棕色");
+const hairStyle = ref("自然状态");
+const hairColor = ref("红色");
 const hairLength = ref<HairLength>("及肩");
-const fringeStyle = ref("直发");
-const fringeLength = ref<HairLength>("及肩");
+const fringeStyle = ref("自然状态");
 
 const demeanorOptions = Object.keys(faceData.demeanorEn);
 const browOptions = Object.keys(faceData.browsMap) as Array<NonNullable<CharacterPayload["眉毛"]>>;
 const mouthOptions = Object.keys(faceData.mouthMap) as Array<NonNullable<CharacterPayload["嘴部"]>>;
 const demeanor = ref("温柔");
-const leftEyeColor = ref("蓝色");
+const leftEyeColor = ref("紫色");
 const rightEyeColor = ref("紫色");
 const emptyEyes = ref(false);
 const halfClosedEyes = ref(false);
@@ -451,14 +467,16 @@ const clothing = reactive(
   ) as Record<ClothingSlotKey, ClothingSelection>,
 );
 
-clothing.upper.name = "学校衬衫";
+clothing.upper.name = "连衣太阳裙";
 clothing.upper.color = "white";
-clothing.lower.name = "经典款校服裙";
-clothing.lower.color = "black";
-clothing["under-lower"].name = "经典款普通内裤";
-clothing["under-lower"].color = "white";
-clothing.feet.name = "运动鞋";
-clothing.feet.color = "white";
+clothing.lower.name = "连衣太阳裙";
+clothing.lower.color = "white";
+clothing["under-lower"].name = "普通内裤";
+clothing["under-lower"].color = "pale white";
+clothing.head.name = "发卡";
+clothing.head.color = "white";
+clothing.feet.name = "校服鞋";
+clothing.legs.name = "女式运动袜";
 
 const transformType = ref("");
 const transformDetails = reactive<Record<TransformDetailField, string>>({
@@ -518,11 +536,19 @@ const transformPartControls = computed(() => {
     });
 });
 
-watch(transformType, () => {
-  for (const key of Object.keys(transformDetails) as TransformDetailField[]) {
-    transformDetails[key] = "";
-  }
-});
+watch(
+  transformType,
+  () => {
+    for (const key of Object.keys(transformDetails) as TransformDetailField[]) {
+      transformDetails[key] = "";
+    }
+  },
+  { flush: "sync" },
+);
+
+const payloadSlotByKey = Object.fromEntries(
+  Object.entries(slotLabels).map(([key, label]) => [label, key]),
+) as Record<keyof NonNullable<CharacterPayload["衣物"]>, ClothingSlotKey>;
 
 function selectedClothing(slotKey: ClothingSlotKey): ClothingItem | undefined {
   const selected = clothing[slotKey].name;
@@ -587,6 +613,110 @@ function clothingPayload() {
   return result;
 }
 
+function clothingStateFromPayload(
+  worn: NonNullable<CharacterPayload["衣物"]>[keyof NonNullable<CharacterPayload["衣物"]>],
+): ClothingState {
+  const durability = worn?.耐久度;
+  if (durability === "完整") return "full";
+  if (durability === "撕裂") return "torn";
+  if (durability === "破旧") return "tattered";
+  if (durability === "磨损") return "frayed";
+  return worn?.状态 ?? durability ?? "full";
+}
+
+function applyPayload(next: CharacterPayload) {
+  bodyShape.value = next.身形 ?? bodyShape.value;
+  breasts.value = next.胸部 ?? breasts.value;
+  belly.value = next.孕肚 ?? belly.value;
+  leftArm.value = next.左臂 ?? leftArm.value;
+  rightArm.value = next.右臂 ?? rightArm.value;
+  hasPenis.value = !!next.阴茎;
+  penisState.value = next.阴茎状态 ?? "soft";
+  penisSize.value = next.阴茎大小 ?? 2;
+  hasBalls.value = next.睾丸 ?? true;
+
+  if (typeof next.发型 === "object") {
+    hairStyle.value = next.发型.发型 ?? hairStyle.value;
+    hairLength.value = next.发型.长度 ?? hairLength.value;
+    fringeStyle.value = next.发型.刘海 ?? "";
+  } else if (typeof next.发型 === "string") {
+    hairStyle.value = next.发型;
+  }
+  hairColor.value = next.发色 ?? hairColor.value;
+  demeanor.value = next.仪态 ?? demeanor.value;
+  leftEyeColor.value = next.眼睛?.左眼瞳色 ?? leftEyeColor.value;
+  rightEyeColor.value = next.眼睛?.右眼瞳色 ?? rightEyeColor.value;
+  emptyEyes.value = next.眼睛?.无神 ?? false;
+  halfClosedEyes.value = next.眼睛?.半睁眼 ?? false;
+  bloodshotEyes.value = next.眼睛?.血丝眼 ?? false;
+  tears.value = next.眼睛?.流泪程度 ?? next.泪水 ?? 0;
+  brow.value = next.眉毛 ?? brow.value;
+  mouth.value = next.嘴部 ?? mouth.value;
+  blush.value = next.脸红程度 ?? next.脸红 ?? blush.value;
+
+  for (const slot of clothingSlots) {
+    clothing[slot.key].name = "";
+    clothing[slot.key].color = "";
+    clothing[slot.key].secondColor = "";
+    clothing[slot.key].state = "full";
+  }
+
+  for (const [payloadSlot, worn] of Object.entries(next.衣物 ?? {}) as Array<
+    [
+      keyof NonNullable<CharacterPayload["衣物"]>,
+      NonNullable<CharacterPayload["衣物"]>[keyof NonNullable<CharacterPayload["衣物"]>],
+    ]
+  >) {
+    if (!worn) continue;
+    const slotKey = payloadSlotByKey[payloadSlot];
+    if (!slotKey) continue;
+    clothing[slotKey].name = worn.名称;
+    clothing[slotKey].color = worn.主色调 ?? "";
+    clothing[slotKey].secondColor = worn.第二色调 ?? "";
+    clothing[slotKey].state = clothingStateFromPayload(worn);
+  }
+
+  for (const key of Object.keys(transformDetails) as TransformDetailField[]) {
+    transformDetails[key] = "";
+  }
+
+  if (typeof next.转化 === "object") {
+    transformType.value = next.转化.类型 ?? "";
+    Object.assign(transformDetails, next.转化.细节 ?? {});
+  } else {
+    transformType.value = next.转化 ?? "";
+    Object.assign(transformDetails, next.转化细节 ?? {});
+  }
+}
+
+async function copyPayloadToClipboard() {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(payload.value, null, 2));
+    clipboardStatus.value = "已复制当前 payload";
+    lastError.value = "";
+  } catch (error) {
+    clipboardStatus.value = "";
+    lastError.value = error instanceof Error ? error.message : "无法写入剪贴板";
+  }
+}
+
+async function importPayloadFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const parsed = JSON.parse(text) as CharacterPayload | { payload?: CharacterPayload };
+    const next =
+      parsed && typeof parsed === "object" && "payload" in parsed && parsed.payload
+        ? parsed.payload
+        : (parsed as CharacterPayload);
+    applyPayload(next);
+    clipboardStatus.value = "已从剪贴板导入";
+    lastError.value = "";
+  } catch (error) {
+    clipboardStatus.value = "";
+    lastError.value = error instanceof Error ? error.message : "剪贴板内容不是有效 JSON";
+  }
+}
+
 const payload = computed<CharacterPayload>(() => ({
   身形: bodyShape.value,
   胸部: breasts.value,
@@ -604,7 +734,7 @@ const payload = computed<CharacterPayload>(() => ({
   发型: {
     发型: hairStyle.value,
     长度: hairLength.value,
-    ...(fringeStyle.value ? { 刘海: fringeStyle.value, 刘海长度: fringeLength.value } : {}),
+    ...(fringeStyle.value ? { 刘海: fringeStyle.value } : {}),
   },
   发色: hairColor.value,
   仪态: demeanor.value,

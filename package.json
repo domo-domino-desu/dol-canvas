@@ -43,8 +43,8 @@
     "typecheck": "tsc --noEmit --allowJs false",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
-    "format": "oxfmt -c ./oxc/.oxfmtrc.json --write .",
-    "format:check": "oxfmt -c ./oxc/.oxfmtrc.json --check .",
+    "format": "oxfmt -c ./.oxfmtrc.json --write .",
+    "format:check": "oxfmt -c ./.oxfmtrc.json --check .",
     "lint-staged": "lint-staged",
     "check": "bun run lint && bun run typecheck"
   },
@@ -68,9 +68,9 @@
   "lint-staged": {
     "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,vue}": [
       "oxlint --fix",
-      "oxfmt -c ./oxc/.oxfmtrc.json --write"
+      "oxfmt -c ./.oxfmtrc.json --write"
     ],
-    "*.{json,md,mdx,yaml,yml,html,css,scss}": "oxfmt -c ./oxc/.oxfmtrc.json --write"
+    "*.{json,md,mdx,yaml,yml,html,css,scss}": "oxfmt -c ./.oxfmtrc.json --write"
   },
   "engines": {
     "bun": ">=1.3.10"

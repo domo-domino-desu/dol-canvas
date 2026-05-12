@@ -13,9 +13,27 @@ function grayHex(v: number): string {
   return `#${s}${s}${s}`;
 }
 
+function applyContrast(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  contrast: number,
+): void {
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const data = imageData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = Math.min(255, Math.max(0, (data[i]! - 128) * contrast + 128));
+    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1]! - 128) * contrast + 128));
+    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2]! - 128) * contrast + 128));
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+}
+
 /**
  * Apply a ColorFilter to an image and return a new canvas.
- * Replicates DoL's rendering pipeline: desaturate → brightness → blend.
+ * Replicates DoL's rendering pipeline: desaturate → brightness → contrast → blend.
  *
  * If filter is empty/undefined, returns original image as a canvas.
  */
@@ -61,7 +79,16 @@ export function applyFilter(
     ctx.globalCompositeOperation = "source-over";
   }
 
-  // Step 3: blend color (composeOverRect: fill → draw image over with blendMode)
+  // Step 3: contrast adjustment.
+  if (filter.contrast != null && filter.contrast !== 1) {
+    applyContrast(ctx, w, h, filter.contrast);
+    // Restore alpha after contrast
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(img, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  // Step 4: blend color (composeOverRect: fill → draw image over with blendMode)
   if (filter.blend) {
     const blendMode = filter.blendMode ?? "hard-light";
     const tmp = makeCanvas(w, h);

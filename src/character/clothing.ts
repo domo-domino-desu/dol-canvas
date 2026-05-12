@@ -46,12 +46,6 @@ const SLOTS: Array<{ cn: string; z: number; dir: string; data: ClothingItem[] }>
   { cn: "私部装备", z: Z.GENITALS, dir: "genitals", data: (clothesData as ClothesJson).genitals },
 ];
 
-// Sprite prefilter for clothing: desaturate + brightness +0.4 before blend
-const CLOTH_PREFILTER: Omit<ColorFilter, "blend"> = {
-  desaturate: true,
-  brightness: 0.4,
-};
-
 function clothFilter(cnColorName?: string): ColorFilter | undefined {
   if (!cnColorName) return undefined;
   const entry =
@@ -59,7 +53,7 @@ function clothFilter(cnColorName?: string): ColorFilter | undefined {
     clothColors.find((e) => e.variable === cnColorName) ??
     clothColors.find((e) => e.name === cnColorName);
   if (!entry) return undefined;
-  return { ...CLOTH_PREFILTER, ...entry.filter, blendMode: "hard-light" };
+  return { ...entry.filter, blendMode: "hard-light" };
 }
 
 function findItem(data: ClothingItem[], cnName: string): ClothingItem | undefined {
@@ -96,7 +90,7 @@ export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
     if (!item) continue;
 
     const integrity = integrityFile(worn, item);
-    const filter = clothFilter(worn.颜色 ?? worn.主色调);
+    const filter = clothFilter(worn.主色调);
     const imgBase = `${b}clothes/${slotDef.dir}/${item.name}/`;
 
     // Main clothing layer
@@ -132,7 +126,7 @@ export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
 
     // Accessory layer
     if (item.hasAcc) {
-      const accFilter = clothFilter(worn.第二颜色 ?? worn.第二色调);
+      const accFilter = clothFilter(worn.第二色调);
       layers.push({
         id: `cloth-${slotDef.cn}-acc`,
         src: `${imgBase}acc.png`,

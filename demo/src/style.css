@@ -28,6 +28,20 @@ select {
   font: inherit;
 }
 
+button {
+  min-height: 36px;
+  padding: 0 12px;
+  color: #202124;
+  background: #ffffff;
+  border: 1px solid #b9b4a8;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #f1efe8;
+}
+
 input[readonly] {
   color: #55524a;
   background: #ece9df;
@@ -71,6 +85,34 @@ input[readonly] {
   border-radius: 8px;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  color: #202124;
+  background: #ffffff;
+  border: 1px solid #b9b4a8;
+  border-radius: 6px;
+}
+
+.icon-button:hover {
+  background: #f1efe8;
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 .field {
   display: grid;
   gap: 6px;
@@ -84,11 +126,13 @@ input[readonly] {
 
 .grid-2,
 .grid-3,
+.actions,
 .clothes {
   display: grid;
   gap: 12px;
 }
 
+.actions,
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -158,6 +202,13 @@ select {
   line-height: 1.45;
 }
 
+.status {
+  margin: 0;
+  color: #3f6212;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 @media (max-width: 760px) {
   .shell {
     grid-template-columns: 1fr;
@@ -179,6 +230,7 @@ select {
 
   .grid-2,
   .grid-3,
+  .actions,
   .clothes {
     grid-template-columns: 1fr;
   }

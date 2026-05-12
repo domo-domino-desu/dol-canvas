@@ -42,8 +42,8 @@ export function buildFaceLayers(ctx: BuildContext): LayerSpec[] {
   const demDir = `${faceDir}${demeanor}/`;
 
   const eyes = p.眼睛 ?? {};
-  const leftEyeColor = eyes.左眼瞳色 ?? eyes.瞳色 ?? p.瞳色;
-  const rightEyeColor = eyes.右眼瞳色 ?? eyes.瞳色 ?? p.瞳色 ?? leftEyeColor;
+  const leftEyeColor = eyes.左眼瞳色;
+  const rightEyeColor = eyes.右眼瞳色 ?? leftEyeColor;
   const emptyEyes = eyes.无神 ?? false;
   const halfClosed = eyes.半睁眼 ?? false;
   const bloodshot = eyes.血丝眼 ?? false;

@@ -77,7 +77,7 @@ export function buildHairLayers(ctx: BuildContext): LayerSpec[] {
   // ── Fringe ────────────────────────────────────────────────────────────────
   const fringe = findFringe(hairPayload?.刘海 ?? p.刘海);
   if (fringe) {
-    const fringeLen = lengthEn(hairPayload?.刘海长度 ?? p.刘海长度 ?? hairPayload?.长度 ?? p.发长);
+    const fringeLen = len;
     if (fringe.files.includes(fringeLen)) {
       layers.push({
         id: "hair-fringe",

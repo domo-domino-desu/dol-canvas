@@ -8,9 +8,11 @@ const imgRoot = fileURLToPath(new URL("../img", import.meta.url));
 const cdnRoot = "https://testingcf.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/";
 const cdnImgBase = `${cdnRoot}img/`;
 const importSource = process.env.DOL_CANVAS_SOURCE === "cdn" ? "cdn" : "local";
+const base = process.env.DOL_CANVAS_BASE ?? "/";
 
 export default defineConfig({
   root: demoRoot,
+  base,
   plugins: [vue()],
   define: {
     __DOL_CANVAS_IMPORT_SOURCE__: JSON.stringify(importSource),
