@@ -54,7 +54,7 @@
             <label for="image-source">图片</label>
             <select id="image-source" v-model="imageSource">
               <option value="local">本地</option>
-              <option value="cdn">testingcf.jsdelivr</option>
+              <option value="cdn">cdn.jsdelivr</option>
             </select>
           </div>
         </div>
@@ -371,7 +371,7 @@ type ResourceSource = keyof typeof imgBases;
 const importSource = __DOL_CANVAS_IMPORT_SOURCE__ as ResourceSource;
 const imageSource = ref<ResourceSource>(importSource);
 const imgBase = computed(() => imgBases[imageSource.value]);
-const importSourceLabel = computed(() => (importSource === "cdn" ? "testingcf.jsdelivr" : "本地"));
+const importSourceLabel = computed(() => (importSource === "cdn" ? "cdn.jsdelivr" : "本地"));
 
 type ColorEntry = { variable: string; name: string; cnName: string };
 type ClothingItem = {

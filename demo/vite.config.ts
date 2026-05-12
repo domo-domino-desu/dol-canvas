@@ -5,7 +5,7 @@ import vue from "@vitejs/plugin-vue";
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const demoRoot = fileURLToPath(new URL(".", import.meta.url));
 const imgRoot = fileURLToPath(new URL("../img", import.meta.url));
-const cdnRoot = "https://testingcf.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/";
+const cdnRoot = "https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/";
 const cdnImgBase = `${cdnRoot}img/`;
 const importSource = process.env.DOL_CANVAS_SOURCE === "cdn" ? "cdn" : "local";
 const base = process.env.DOL_CANVAS_BASE ?? "/";

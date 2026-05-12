@@ -2,10 +2,10 @@
 
 `dol-canvas` 是一个用于渲染 Degrees of Lewdity 风格角色立绘的 Canvas 库，提供中文 payload API，并内置 Vue 组件封装。
 
-默认资源地址使用 testingcf.jsdelivr CDN：
+默认资源地址使用 cdn.jsdelivr CDN：
 
 ```text
-https://testingcf.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/
+https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/
 ```
 
 ## Vue 使用

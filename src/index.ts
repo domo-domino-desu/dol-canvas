@@ -14,7 +14,7 @@ interface DolCanvasConfig {
 }
 
 const _config: DolCanvasConfig = {
-  baseUrl: "https://testingcf.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/",
+  baseUrl: "https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/",
 };
 
 // ── DolCanvas class ───────────────────────────────────────────────────────────
