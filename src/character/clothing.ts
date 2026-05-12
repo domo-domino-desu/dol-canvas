@@ -95,6 +95,44 @@ function armStateFile(ctx: BuildContext, item: ClothingItem): string | undefined
   );
 }
 
+function armPoseFile(
+  ctx: BuildContext,
+  worn: ClothingWorn,
+  item: ClothingItem,
+  side: "left" | "right",
+): string | undefined {
+  const pose =
+    side === "left"
+      ? ctx.payload.左臂 === "cover"
+        ? "cover"
+        : "idle"
+      : (ctx.payload.右臂 ?? "idle");
+  const base = `${side}-${pose}`;
+  const pattern = item.patternLayer === "primary" ? patternFilePart(worn, item) : "";
+  const variants = item.armVariants.filter((file) => !file.endsWith("-acc"));
+
+  return (
+    (pattern ? variants.find((file) => file === `${base}${pattern}`) : undefined) ??
+    variants.find((file) => file === base) ??
+    variants.find((file) => file.startsWith(`${base}-`))
+  );
+}
+
+function handAccessoryFile(
+  ctx: BuildContext,
+  item: ClothingItem,
+  side: "left" | "right",
+): string | undefined {
+  const pose =
+    side === "left"
+      ? ctx.payload.左臂 === "cover"
+        ? "cover"
+        : "idle"
+      : (ctx.payload.右臂 ?? "idle");
+  const base = `${side}-${pose}`;
+  return item.armVariants.find((file) => file === `${base}-acc`);
+}
+
 function mainClothingFile(ctx: BuildContext, worn: ClothingWorn, item: ClothingItem): string {
   const integrity = integrityFile(worn, item);
   if (item.states.includes(integrity)) return integrity;
@@ -133,10 +171,38 @@ export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
     const item = findItem(slotDef.data, worn.名称);
     if (!item) continue;
 
-    const integrity = integrityFile(worn, item);
     const mainFile = mainClothingFile(ctx, worn, item);
     const filter = clothFilter(worn.主色调);
     const imgBase = `${b}clothes/${slotDef.dir}/${item.name}/`;
+
+    if (slotDef.cn === "手饰") {
+      for (const side of ["left", "right"] as const) {
+        const file = armPoseFile(ctx, worn, item, side);
+        if (file) {
+          layers.push({
+            id: `cloth-${slotDef.cn}-${side}`,
+            src: `${imgBase}${file}.png`,
+            z: slotDef.z,
+            filter,
+            animation: BREATH,
+          });
+        }
+
+        if (item.hasAcc && item.accImage !== 0) {
+          const accFile = handAccessoryFile(ctx, item, side);
+          if (accFile) {
+            layers.push({
+              id: `cloth-${slotDef.cn}-${side}-acc`,
+              src: `${imgBase}${accFile}.png`,
+              z: slotDef.z + 0.2,
+              filter: clothFilter(worn.第二色调),
+              animation: BREATH,
+            });
+          }
+        }
+      }
+      continue;
+    }
 
     // Main clothing layer
     if (item.mainImage !== 0) {
