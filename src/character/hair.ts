@@ -1,8 +1,6 @@
 import type { LayerSpec, BuildContext, ColorFilter } from "@/types";
 import { Z } from "@/data/zindex";
-import hairData from "@/data/generated/hair.json";
-import colorsData from "@/data/generated/colors.json";
-import i18nData from "@/data/generated/i18n.json";
+import { hairData, colorsData, i18nData } from "@/data/generated";
 
 type HairStyle = { name: string; cnName: string; backLengths: string[]; sideFiles: string[] };
 type FringeStyle = { name: string; cnName: string; files: string[] };

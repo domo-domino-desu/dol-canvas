@@ -1,6 +1,6 @@
 import type { LayerSpec, BuildContext } from "@/types";
 import { Z } from "@/data/zindex";
-import i18nData from "@/data/generated/i18n.json";
+import { i18nData } from "@/data/generated";
 
 type I18nEntry = { en: string };
 const bodyShapes = (i18nData as typeof i18nData).bodyShapes as Record<string, I18nEntry>;

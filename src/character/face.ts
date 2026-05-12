@@ -1,7 +1,6 @@
 import type { LayerSpec, BuildContext, ColorFilter } from "@/types";
 import { Z } from "@/data/zindex";
-import faceData from "@/data/generated/face.json";
-import colorsData from "@/data/generated/colors.json";
+import { faceData, colorsData } from "@/data/generated";
 
 type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
 

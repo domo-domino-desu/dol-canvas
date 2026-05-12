@@ -1,7 +1,6 @@
 import type { LayerSpec, BuildContext, ColorFilter } from "@/types";
 import { Z } from "@/data/zindex";
-import transformData from "@/data/generated/transformations.json";
-import colorsData from "@/data/generated/colors.json";
+import { transformationsData, colorsData } from "@/data/generated";
 
 type TransformEntry = {
   cnName: string;
@@ -10,7 +9,7 @@ type TransformEntry = {
 };
 type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
 
-const transforms = transformData as Record<string, TransformEntry>;
+const transforms = transformationsData as Record<string, TransformEntry>;
 const hairColors: ColorEntry[] = (colorsData as typeof colorsData).hair as ColorEntry[];
 const BREATH = "playerBreath";
 

@@ -1,7 +1,6 @@
 import type { LayerSpec, BuildContext, ClothingWorn, ColorFilter } from "@/types";
 import { Z } from "@/data/zindex";
-import clothesData from "@/data/generated/clothes.json";
-import colorsData from "@/data/generated/colors.json";
+import { clothesData, colorsData } from "@/data/generated";
 
 type ClothingItem = {
   name: string;

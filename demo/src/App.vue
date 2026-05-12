@@ -355,12 +355,14 @@ import type {
   RenderError,
   RightArmState,
 } from "dol-canvas";
-import hairData from "@/data/generated/hair.json";
-import colorsData from "@/data/generated/colors.json";
-import faceData from "@/data/generated/face.json";
-import clothesData from "@/data/generated/clothes.json";
-import transformsData from "@/data/generated/transformations.json";
-import i18nData from "@/data/generated/i18n.json";
+import {
+  colorsData,
+  clothesData,
+  faceData,
+  hairData,
+  i18nData,
+  transformationsData,
+} from "dol-canvas";
 
 const imgBases = {
   local: __DOL_CANVAS_LOCAL_IMG_BASE__,
@@ -491,7 +493,7 @@ const transformDetails = reactive<Record<TransformDetailField, string>>({
 });
 
 const transformOptions = computed(() =>
-  Object.entries(transformsData).map(([key, value]) => ({
+  Object.entries(transformationsData).map(([key, value]) => ({
     key,
     cnName: value.cnName,
     label: value.label ?? value.cnName,

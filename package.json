@@ -26,6 +26,7 @@
   "scripts": {
     "prepare": "husky",
     "copy-img": "bun scripts/copy-img.ts",
+    "warmup:cdn": "bun scripts/warmup-cdn.ts",
     "gen": "bun scripts/gen-all.ts",
     "gen:i18n": "bun scripts/gen-i18n.ts",
     "gen:clothes": "bun scripts/gen-clothes.ts",
