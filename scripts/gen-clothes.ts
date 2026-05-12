@@ -43,7 +43,14 @@ interface DolClothingInfo {
   nameCapEn: string;
   colourOptions: string[];
   accColourOptions: string[];
+  patternOptions: string[];
+  patternLayer: string;
   accessory: number;
+  accessoryIntegrityImg: boolean;
+  mainImage: number;
+  accImage: number;
+  sleeveImg: boolean;
+  sleeveAccImg: boolean;
 }
 
 function parseClothingJs(jsFilePath: string): Record<string, DolClothingInfo> {
@@ -92,7 +99,11 @@ function parseClothingJs(jsFilePath: string): Record<string, DolClothingInfo> {
   const nameCapRe = /name_cap:\s*"([^"]+)"/;
   const colourOptsRe = /colour_options:\s*\[([^\]]*)\]/s;
   const accColourOptsRe = /accessory_colour_options:\s*\[([^\]]*)\]/s;
+  const patternOptsRe = /pattern_options:\s*\[([^\]]*)\]/s;
+  const patternLayerRe = /pattern_layer:\s*"([^"]+)"/;
   const accessoryRe = /\baccessory:\s*(\d)/;
+  const numProp = (block: string, prop: string, fallback: number): number =>
+    parseInt(new RegExp(`\\b${prop}:\\s*(\\d)`).exec(block)?.[1] ?? `${fallback}`);
   const parseStrArray = (str?: string): string[] =>
     str ? [...str.matchAll(/"([^"]+)"/g)].map((m) => m[1]!) : [];
 
@@ -105,7 +116,14 @@ function parseClothingJs(jsFilePath: string): Record<string, DolClothingInfo> {
       nameCapEn: nameCapRe.exec(block)?.[1] ?? "",
       colourOptions: parseStrArray(colourOptsRe.exec(block)?.[1]),
       accColourOptions: parseStrArray(accColourOptsRe.exec(block)?.[1]),
+      patternOptions: parseStrArray(patternOptsRe.exec(block)?.[1]),
+      patternLayer: patternLayerRe.exec(block)?.[1] ?? "",
       accessory: parseInt(accessoryRe.exec(block)?.[1] ?? "0"),
+      accessoryIntegrityImg: numProp(block, "accessory_integrity_img", 0) === 1,
+      mainImage: numProp(block, "mainImage", 1),
+      accImage: numProp(block, "accImage", 1),
+      sleeveImg: numProp(block, "sleeve_img", 0) === 1,
+      sleeveAccImg: numProp(block, "sleeve_acc_img", 0) === 1,
     };
   }
   return map;
@@ -151,13 +169,19 @@ function buildCnToVariable(dolData: Record<string, DolClothingInfo>): Record<str
 interface ClothingItem {
   name: string;
   cnName: string;
-  enName: string;
   colorOptions: string[];
   accColorOptions: string[];
+  patternOptions: string[];
+  patternLayer: string;
   states: string[];
   numeric: string[];
   armVariants: string[];
   hasAcc: boolean;
+  accessoryIntegrityImg: boolean;
+  mainImage: number;
+  accImage: number;
+  sleeveImg: boolean;
+  sleeveAccImg: boolean;
 }
 
 const allClothes: Record<string, ClothingItem[]> = {};
@@ -187,13 +211,19 @@ for (const { cn: slotCn, slot, imgDir, jsFile } of SLOTS) {
     items.push({
       name: variable,
       cnName,
-      enName: info?.name ?? variable,
       colorOptions: info?.colourOptions ?? [],
       accColorOptions: info?.accColourOptions ?? [],
+      patternOptions: info?.patternOptions ?? [],
+      patternLayer: info?.patternLayer ?? "",
       states,
       numeric,
       armVariants,
       hasAcc: (info?.accessory ?? 0) > 0 || allFiles.some((f) => f.includes("-acc")),
+      accessoryIntegrityImg: info?.accessoryIntegrityImg ?? false,
+      mainImage: info?.mainImage ?? 1,
+      accImage: info?.accImage ?? 1,
+      sleeveImg: info?.sleeveImg ?? false,
+      sleeveAccImg: info?.sleeveAccImg ?? false,
     });
   }
 

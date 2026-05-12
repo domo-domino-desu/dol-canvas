@@ -58,6 +58,8 @@ export interface ClothingWorn {
   名称: string;
   主色调?: string;
   第二色调?: string;
+  图案?: string;
+  花纹?: string;
   状态?: ClothingState; // default "full"
   耐久度?: ClothingDurability;
   胸部层级?: number; // breast_img numeric layer (0-6), for upper slots

@@ -5,13 +5,19 @@ import { clothesData, colorsData } from "@/data/generated";
 type ClothingItem = {
   name: string;
   cnName: string;
-  enName: string;
   colorOptions: string[];
   accColorOptions: string[];
+  patternOptions?: string[];
+  patternLayer?: string;
   states: string[];
   numeric: string[];
   armVariants: string[];
   hasAcc: boolean;
+  accessoryIntegrityImg?: boolean;
+  mainImage?: number;
+  accImage?: number;
+  sleeveImg?: boolean;
+  sleeveAccImg?: boolean;
 };
 type ClothesJson = typeof clothesData;
 type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
@@ -74,6 +80,45 @@ function integrityFile(worn: ClothingWorn, item: ClothingItem): string {
   return item.states[0] ?? "full";
 }
 
+function armStateFile(ctx: BuildContext, item: ClothingItem): string | undefined {
+  const armFiles = item.armVariants.filter((file) => !file.endsWith("-acc"));
+  if (!armFiles.length) return undefined;
+
+  const rightArm = ctx.payload.右臂 ?? "hold";
+  const rightFile = rightArm === "idle" ? "right-idle" : `right-${rightArm}`;
+  const leftFile = ctx.payload.左臂 === "cover" ? "left-cover" : "left-idle";
+
+  return (
+    armFiles.find((file) => file === rightFile) ??
+    armFiles.find((file) => file === leftFile) ??
+    armFiles[0]
+  );
+}
+
+function mainClothingFile(ctx: BuildContext, worn: ClothingWorn, item: ClothingItem): string {
+  const integrity = integrityFile(worn, item);
+  if (item.states.includes(integrity)) return integrity;
+  return armStateFile(ctx, item) ?? integrity;
+}
+
+function patternFilePart(worn: ClothingWorn, item: ClothingItem): string {
+  const pattern = worn.图案 ?? worn.花纹 ?? item.patternOptions?.[0];
+  return pattern ? `-${pattern.replace(/ /g, "-")}` : "";
+}
+
+function accessoryFile(ctx: BuildContext, worn: ClothingWorn, item: ClothingItem): string {
+  const pattern = item.patternLayer === "secondary" ? patternFilePart(worn, item) : "";
+  if (item.accessoryIntegrityImg) return `acc-${integrityFile(worn, item)}${pattern}`;
+
+  const armFile = armStateFile(ctx, item);
+  if (armFile && item.armVariants.includes(`${armFile}${pattern}-acc`)) {
+    return `${armFile}${pattern}-acc`;
+  }
+  if (armFile && item.armVariants.includes(`${armFile}-acc`)) return `${armFile}-acc`;
+
+  return `acc${pattern}`;
+}
+
 export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
   const { payload, baseUrl, breastSize } = ctx;
   if (!payload.衣物) return [];
@@ -89,17 +134,20 @@ export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
     if (!item) continue;
 
     const integrity = integrityFile(worn, item);
+    const mainFile = mainClothingFile(ctx, worn, item);
     const filter = clothFilter(worn.主色调);
     const imgBase = `${b}clothes/${slotDef.dir}/${item.name}/`;
 
     // Main clothing layer
-    layers.push({
-      id: `cloth-${slotDef.cn}`,
-      src: `${imgBase}${integrity}.png`,
-      z: slotDef.z,
-      filter,
-      animation: BREATH,
-    });
+    if (item.mainImage !== 0) {
+      layers.push({
+        id: `cloth-${slotDef.cn}`,
+        src: `${imgBase}${mainFile}.png`,
+        z: slotDef.z,
+        filter,
+        animation: BREATH,
+      });
+    }
 
     // For upper/under-upper: add breast-fitting numeric layer if available
     if ((slotDef.cn === "上装" || slotDef.cn === "内衣上装") && item.numeric.length > 0) {
@@ -124,11 +172,11 @@ export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
     }
 
     // Accessory layer
-    if (item.hasAcc) {
+    if (item.hasAcc && item.accImage !== 0) {
       const accFilter = clothFilter(worn.第二色调);
       layers.push({
         id: `cloth-${slotDef.cn}-acc`,
-        src: `${imgBase}acc.png`,
+        src: `${imgBase}${accessoryFile(ctx, worn, item)}.png`,
         z: slotDef.z + 0.2,
         filter: accFilter,
         animation: BREATH,
