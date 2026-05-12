@@ -1,0 +1,516 @@
+{
+  "angel": {
+    "cnName": "天使",
+    "label": "天使",
+    "parts": {
+      "halo": [
+        "celestial-back",
+        "celestial-front",
+        "default-back",
+        "default-front",
+        "traditional-back",
+        "traditional-front"
+      ],
+      "wings-cover": [
+        "cherub-left-fallenplus",
+        "cherub-left",
+        "cherub-right-fallenplus",
+        "cherub-right",
+        "classic-left",
+        "classic-right",
+        "default-left",
+        "default-right",
+        "harpy-default-left",
+        "harpy-default-right"
+      ],
+      "wings-idle": ["cherub", "classic", "default", "harpy-default"]
+    },
+    "partLabels": {
+      "halo": "光环",
+      "wings-cover": "翅膀",
+      "wings-idle": "翅膀"
+    },
+    "variantLabels": {
+      "halo": {
+        "celestial-back": "星辰",
+        "celestial-front": "星辰",
+        "default-back": "默认",
+        "default-front": "默认",
+        "traditional-back": "传统",
+        "traditional-front": "传统"
+      },
+      "wings-cover": {
+        "cherub-left-fallenplus": "cherub覆羽",
+        "cherub-left": "cherub",
+        "cherub-right-fallenplus": "cherub覆羽",
+        "cherub-right": "cherub",
+        "classic-left": "经典",
+        "classic-right": "经典",
+        "default-left": "默认",
+        "default-right": "默认",
+        "harpy-default-left": "harpy默认",
+        "harpy-default-right": "harpy默认"
+      },
+      "wings-idle": {
+        "cherub": "cherub",
+        "classic": "经典",
+        "default": "默认",
+        "harpy-default": "harpy默认"
+      }
+    }
+  },
+  "bird": {
+    "cnName": "鸟",
+    "label": "鹰",
+    "parts": {
+      "eyes": ["default"],
+      "feathers": ["loose", "malar-default", "plumage-default", "pubes-default"],
+      "tail-cover": ["default"],
+      "tail-flaunt": ["default"],
+      "tail-idle": ["default"],
+      "wings-cover": [
+        "default-angel-left",
+        "default-angel-right",
+        "default-demon-left",
+        "default-demon-right",
+        "default-fallen-left",
+        "default-fallen-right",
+        "default-left",
+        "default-right"
+      ],
+      "wings-idle": [
+        "default-angel",
+        "default-demon",
+        "default-fallen",
+        "default",
+        "flowers-angel",
+        "flowers-default"
+      ]
+    },
+    "partLabels": {
+      "eyes": "眼睛",
+      "feathers": "feathers",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴",
+      "wings-cover": "翅膀",
+      "wings-idle": "翅膀"
+    },
+    "variantLabels": {
+      "eyes": {
+        "default": "默认"
+      },
+      "feathers": {
+        "loose": "loose",
+        "malar-default": "malar默认",
+        "plumage-default": "plumage默认",
+        "pubes-default": "pubes默认"
+      },
+      "tail-cover": {
+        "default": "默认"
+      },
+      "tail-flaunt": {
+        "default": "默认"
+      },
+      "tail-idle": {
+        "default": "默认"
+      },
+      "wings-cover": {
+        "default-angel-left": "默认angel",
+        "default-angel-right": "默认angel",
+        "default-demon-left": "默认demon",
+        "default-demon-right": "默认demon",
+        "default-fallen-left": "默认fallen",
+        "default-fallen-right": "默认fallen",
+        "default-left": "默认",
+        "default-right": "默认"
+      },
+      "wings-idle": {
+        "default-angel": "默认angel",
+        "default-demon": "默认demon",
+        "default-fallen": "默认fallen",
+        "default": "默认",
+        "flowers-angel": "flowersangel",
+        "flowers-default": "flowers默认"
+      }
+    }
+  },
+  "cat": {
+    "cnName": "猫",
+    "label": "猫",
+    "parts": {
+      "ears": ["default"],
+      "tail-cover": ["default"],
+      "tail-flaunt": ["default"],
+      "tail-idle": ["default"]
+    },
+    "partLabels": {
+      "ears": "耳朵",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴"
+    },
+    "variantLabels": {
+      "ears": {
+        "default": "默认"
+      },
+      "tail-cover": {
+        "default": "默认"
+      },
+      "tail-flaunt": {
+        "default": "默认"
+      },
+      "tail-idle": {
+        "default": "默认"
+      }
+    }
+  },
+  "cow": {
+    "cnName": "牛",
+    "label": "牛",
+    "parts": {
+      "ears": [
+        "classic-spotted-black",
+        "classic-spotted-brown",
+        "classic",
+        "default",
+        "spotted-black",
+        "spotted-brown",
+        "tag"
+      ],
+      "horns": ["default-demon", "default", "succubus-demon"],
+      "tail-cover": ["black-demon", "default-demon"],
+      "tail-flaunt": ["black-demon", "default-demon"],
+      "tail-idle": ["black-demon", "black", "default-demon", "default"]
+    },
+    "partLabels": {
+      "ears": "耳朵",
+      "horns": "犄角",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴"
+    },
+    "variantLabels": {
+      "ears": {
+        "classic-spotted-black": "经典spotted黑色",
+        "classic-spotted-brown": "经典spottedbrown",
+        "classic": "经典",
+        "default": "默认",
+        "spotted-black": "黑色斑点",
+        "spotted-brown": "棕色斑点",
+        "tag": "tag"
+      },
+      "horns": {
+        "default-demon": "默认demon",
+        "default": "默认",
+        "succubus-demon": "魅魔demon"
+      },
+      "tail-cover": {
+        "black-demon": "黑色demon",
+        "default-demon": "默认demon"
+      },
+      "tail-flaunt": {
+        "black-demon": "黑色demon",
+        "default-demon": "默认demon"
+      },
+      "tail-idle": {
+        "black-demon": "黑色demon",
+        "black": "黑色",
+        "default-demon": "默认demon",
+        "default": "默认"
+      }
+    }
+  },
+  "demon": {
+    "cnName": "恶魔",
+    "label": "恶魔",
+    "parts": {
+      "horns": ["classic", "default", "succubus"],
+      "tail-cover": [
+        "classic",
+        "default-cat",
+        "default-cow",
+        "default-feral",
+        "default-wolf",
+        "default",
+        "imp",
+        "succubus"
+      ],
+      "tail-flaunt": [
+        "classic",
+        "default-cat",
+        "default-cow",
+        "default-feral",
+        "default-wolf",
+        "default",
+        "imp",
+        "succubus"
+      ],
+      "tail-idle": [
+        "classic",
+        "default-cat",
+        "default-cow",
+        "default-feral",
+        "default-wolf",
+        "default",
+        "imp",
+        "succubus"
+      ],
+      "wings-cover": ["default", "imp", "succubus"],
+      "wings-flaunt": ["default", "imp", "succubus"],
+      "wings-idle": ["default", "imp", "succubus"]
+    },
+    "partLabels": {
+      "horns": "犄角",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴",
+      "wings-cover": "翅膀",
+      "wings-flaunt": "翅膀",
+      "wings-idle": "翅膀"
+    },
+    "variantLabels": {
+      "horns": {
+        "classic": "经典",
+        "default": "默认",
+        "succubus": "魅魔"
+      },
+      "tail-cover": {
+        "classic": "经典",
+        "default-cat": "默认cat",
+        "default-cow": "默认cow",
+        "default-feral": "默认野性的",
+        "default-wolf": "默认wolf",
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      },
+      "tail-flaunt": {
+        "classic": "经典",
+        "default-cat": "默认cat",
+        "default-cow": "默认cow",
+        "default-feral": "默认野性的",
+        "default-wolf": "默认wolf",
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      },
+      "tail-idle": {
+        "classic": "经典",
+        "default-cat": "默认cat",
+        "default-cow": "默认cow",
+        "default-feral": "默认野性的",
+        "default-wolf": "默认wolf",
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      },
+      "wings-cover": {
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      },
+      "wings-flaunt": {
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      },
+      "wings-idle": {
+        "default": "默认",
+        "imp": "小恶魔",
+        "succubus": "魅魔"
+      }
+    }
+  },
+  "fallen": {
+    "cnName": "堕天使",
+    "label": "堕天使",
+    "parts": {
+      "halo": [
+        "celestial-back",
+        "celestial-black-back",
+        "celestial-black-front",
+        "celestial-fallenplus-back",
+        "celestial-fallenplus-front",
+        "celestial-front",
+        "default-back",
+        "default-front",
+        "traditional-back",
+        "traditional-front"
+      ],
+      "wings-cover": [
+        "cherub-black-left",
+        "cherub-black-right",
+        "cherub-fallenplus-left",
+        "cherub-fallenplus-right",
+        "cherub-left",
+        "cherub-right",
+        "classic-fallenplus-left",
+        "classic-fallenplus-right",
+        "classic-left",
+        "classic-right",
+        "default-left",
+        "default-right",
+        "fallenplus-left",
+        "fallenplus-right",
+        "harpy-default-left",
+        "harpy-default-right",
+        "harpy-fallenplus-left",
+        "harpy-fallenplus-right",
+        "torn-left",
+        "torn-right"
+      ],
+      "wings-idle": [
+        "cherub-black",
+        "cherub-fallenplus",
+        "cherub",
+        "classic-fallenplus",
+        "classic",
+        "default",
+        "fallenplus",
+        "harpy-default",
+        "harpy-fallenplus",
+        "torn"
+      ]
+    },
+    "partLabels": {
+      "halo": "光环",
+      "wings-cover": "翅膀",
+      "wings-idle": "翅膀"
+    },
+    "variantLabels": {
+      "halo": {
+        "celestial-back": "星辰",
+        "celestial-black-back": "黑星",
+        "celestial-black-front": "黑星",
+        "celestial-fallenplus-back": "救赎之星",
+        "celestial-fallenplus-front": "救赎之星",
+        "celestial-front": "星辰",
+        "default-back": "默认",
+        "default-front": "默认",
+        "traditional-back": "传统",
+        "traditional-front": "传统"
+      },
+      "wings-cover": {
+        "cherub-black-left": "cherub黑色",
+        "cherub-black-right": "cherub黑色",
+        "cherub-fallenplus-left": "cherub覆羽",
+        "cherub-fallenplus-right": "cherub覆羽",
+        "cherub-left": "cherub",
+        "cherub-right": "cherub",
+        "classic-fallenplus-left": "经典羽毛",
+        "classic-fallenplus-right": "经典羽毛",
+        "classic-left": "经典",
+        "classic-right": "经典",
+        "default-left": "默认",
+        "default-right": "默认",
+        "fallenplus-left": "覆羽",
+        "fallenplus-right": "覆羽",
+        "harpy-default-left": "harpy默认",
+        "harpy-default-right": "harpy默认",
+        "harpy-fallenplus-left": "harpy覆羽",
+        "harpy-fallenplus-right": "harpy覆羽",
+        "torn-left": "torn",
+        "torn-right": "torn"
+      },
+      "wings-idle": {
+        "cherub-black": "cherub黑色",
+        "cherub-fallenplus": "cherub覆羽",
+        "cherub": "cherub",
+        "classic-fallenplus": "经典羽毛",
+        "classic": "经典",
+        "default": "默认",
+        "fallenplus": "覆羽",
+        "harpy-default": "harpy默认",
+        "harpy-fallenplus": "harpy覆羽",
+        "torn": "torn"
+      }
+    }
+  },
+  "fox": {
+    "cnName": "狐",
+    "label": "狐",
+    "parts": {
+      "cheeks": ["default"],
+      "ears": ["default-demon", "default"],
+      "tail-cover": ["default-demon", "default"],
+      "tail-flaunt": ["default-demon", "default"],
+      "tail-idle": ["default-demon", "default"]
+    },
+    "partLabels": {
+      "cheeks": "脸颊",
+      "ears": "耳朵",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴"
+    },
+    "variantLabels": {
+      "cheeks": {
+        "default": "默认"
+      },
+      "ears": {
+        "default-demon": "默认demon",
+        "default": "默认"
+      },
+      "tail-cover": {
+        "default-demon": "默认demon",
+        "default": "默认"
+      },
+      "tail-flaunt": {
+        "default-demon": "默认demon",
+        "default": "默认"
+      },
+      "tail-idle": {
+        "default-demon": "默认demon",
+        "default": "默认"
+      }
+    }
+  },
+  "wolf": {
+    "cnName": "狼",
+    "label": "狼",
+    "parts": {
+      "cheeks": ["feral"],
+      "ears": ["default", "feral"],
+      "hirsute": ["pits-default", "pubes-default"],
+      "tail-cover": ["demon-default", "demon-feral"],
+      "tail-flaunt": ["demon-default", "demon-feral"],
+      "tail-idle": ["default", "demon-default", "demon-feral", "feral"]
+    },
+    "partLabels": {
+      "cheeks": "脸颊",
+      "ears": "耳朵",
+      "hirsute": "hirsute",
+      "tail-cover": "尾巴",
+      "tail-flaunt": "尾巴",
+      "tail-idle": "尾巴"
+    },
+    "variantLabels": {
+      "cheeks": {
+        "feral": "野性的"
+      },
+      "ears": {
+        "default": "默认",
+        "feral": "野性的"
+      },
+      "hirsute": {
+        "pits-default": "pits默认",
+        "pubes-default": "pubes默认"
+      },
+      "tail-cover": {
+        "demon-default": "demon默认",
+        "demon-feral": "demon野性的"
+      },
+      "tail-flaunt": {
+        "demon-default": "demon默认",
+        "demon-feral": "demon野性的"
+      },
+      "tail-idle": {
+        "default": "默认",
+        "demon-default": "demon默认",
+        "demon-feral": "demon野性的",
+        "feral": "野性的"
+      }
+    }
+  }
+}

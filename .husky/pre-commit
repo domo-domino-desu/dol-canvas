@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+if [ -f .githooks/pre-commit ]; then
+  .githooks/pre-commit || exit $?
+fi
+
+bun run lint-staged

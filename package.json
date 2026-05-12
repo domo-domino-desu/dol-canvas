@@ -1,0 +1,78 @@
+{
+  "name": "dol-canvas",
+  "version": "0.1.0",
+  "description": "Degrees of Lewdity style canvas character renderer with a Chinese payload API.",
+  "workspaces": [
+    "demo"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "img"
+  ],
+  "type": "module",
+  "main": "dist/dol-canvas.umd.js",
+  "module": "dist/dol-canvas.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/dol-canvas.esm.js",
+      "require": "./dist/dol-canvas.umd.js"
+    },
+    "./vue": {
+      "types": "./src/vue/index.ts",
+      "import": "./src/vue/index.ts"
+    }
+  },
+  "scripts": {
+    "prepare": "husky",
+    "copy-img": "bun scripts/copy-img.ts",
+    "gen": "bun scripts/gen-all.ts",
+    "gen:i18n": "bun scripts/gen-i18n.ts",
+    "gen:clothes": "bun scripts/gen-clothes.ts",
+    "gen:colors": "bun scripts/gen-colors.ts",
+    "gen:hair": "bun scripts/gen-hair.ts",
+    "gen:transformations": "bun scripts/gen-transformations.ts",
+    "gen:face": "bun scripts/gen-face.ts",
+    "gen:whitelist:check": "bun scripts/gen-whitelist.ts",
+    "gen:whitelist:reset": "bun scripts/gen-whitelist.ts --reset",
+    "dev": "vite --config demo/vite.config.ts --host 0.0.0.0",
+    "demo": "bun --filter @dol-canvas/demo dev",
+    "demo:local": "bun --filter @dol-canvas/demo dev:local",
+    "demo:cdn": "bun --filter @dol-canvas/demo dev:cdn",
+    "build": "vite build --config vite.lib.config.ts",
+    "typecheck": "tsc --noEmit --allowJs false",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "oxfmt -c ./oxc/.oxfmtrc.json --write .",
+    "format:check": "oxfmt -c ./oxc/.oxfmtrc.json --check .",
+    "lint-staged": "lint-staged",
+    "check": "bun run lint && bun run typecheck"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
+    "vite": "^7.0.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "typescript": "^5.9.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "vue": "^3.5.0"
+  },
+  "lint-staged": {
+    "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,vue}": [
+      "oxlint --fix",
+      "oxfmt -c ./oxc/.oxfmtrc.json --write"
+    ],
+    "*.{json,md,mdx,yaml,yml,html,css,scss}": "oxfmt -c ./oxc/.oxfmtrc.json --write"
+  },
+  "engines": {
+    "bun": ">=1.3.10"
+  }
+}

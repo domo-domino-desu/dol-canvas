@@ -1,0 +1,621 @@
+{
+  "hairStyles": [
+    {
+      "name": "default",
+      "cnName": "自然状态",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "fro",
+      "cnName": "非洲蓬蓬头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "afro pouf",
+      "cnName": "法式非洲丸子蓬蓬头",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "afro puffs",
+      "cnName": "非洲丸子蓬蓬头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "all down",
+      "cnName": "散发",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "bedhead",
+      "cnName": "被窝头",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "braid left",
+      "cnName": "左侧编辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "braid right",
+      "cnName": "右侧编辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "bubble tails",
+      "cnName": "泡泡双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "crescent tails",
+      "cnName": "新月尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "curl",
+      "cnName": "卷发",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "curly pigtails",
+      "cnName": "卷卷双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "curly side up",
+      "cnName": "卷卷单侧束发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "defined curl",
+      "cnName": "定型卷发",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "messy ponytail",
+      "cnName": "拖布头",
+      "backLengths": ["navel", "thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "dreads",
+      "cnName": "脏辫",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "drill ringlets",
+      "cnName": "钻型鬈发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "flat ponytail",
+      "cnName": "扁平马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "fluffy ponytail",
+      "cnName": "蓬松马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "french bob",
+      "cnName": "法式波波头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "half-up",
+      "cnName": "半束发",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "half up twintail",
+      "cnName": "半扎马尾",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "heart braid",
+      "cnName": "心型编发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "jellyfish ponytail",
+      "cnName": "水母马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "jellyfish twintails",
+      "cnName": "水母双马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "layered bob",
+      "cnName": "层叠波波头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "left fishtail",
+      "cnName": "左鱼尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "loop braid",
+      "cnName": "环形编发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "loose",
+      "cnName": "松散",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "low tails",
+      "cnName": "低马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "messy",
+      "cnName": "凌乱",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "messy bun",
+      "cnName": "凌乱包子头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "neat",
+      "cnName": "顺直发",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "pigtails",
+      "cnName": "双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ponytail",
+      "cnName": "马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "princess twintails",
+      "cnName": "公主双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "princess wave",
+      "cnName": "公主卷",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ribbon tail",
+      "cnName": "缎带马尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "right fishtail",
+      "cnName": "右侧鱼尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ruffled",
+      "cnName": "蓬乱",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sailor buns",
+      "cnName": "少女双丸子头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "scorpion tails",
+      "cnName": "蝎尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "shaved",
+      "cnName": "剃刀",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "short",
+      "cnName": "短发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "short spiky",
+      "cnName": "刺猬头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "straight bob",
+      "cnName": "直发波波头",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sidecut",
+      "cnName": "单侧剃刀",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sidetail left",
+      "cnName": "左侧单马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sidetail right",
+      "cnName": "右侧单马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sleek",
+      "cnName": "顺滑",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "space buns",
+      "cnName": "太空双丸子头",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "straight",
+      "cnName": "直发",
+      "backLengths": ["feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "swept left",
+      "cnName": "左侧梳发",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "thick pigtails",
+      "cnName": "浓密双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "thick ponytail",
+      "cnName": "浓密马尾辫",
+      "backLengths": ["thighs", "feet"],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "thick sidetail",
+      "cnName": "浓密单侧辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "thick twintails",
+      "cnName": "浓密双辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "twin braids",
+      "cnName": "双辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "twin fishtails",
+      "cnName": "双鱼尾辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "twintails",
+      "cnName": "日式双马尾",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "twin double braids",
+      "cnName": "双麻花辫",
+      "backLengths": [],
+      "sideFiles": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    }
+  ],
+  "fringeStyles": [
+    {
+      "name": "default",
+      "cnName": "自然状态",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "aerial",
+      "cnName": "空气炸毛刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "blunt locks",
+      "cnName": "齐刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "bowl",
+      "cnName": "锅盖头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "bedhead",
+      "cnName": "被窝头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "buzzcut",
+      "cnName": "圆寸",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "curtain",
+      "cnName": "帘式刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "drill ringlets",
+      "cnName": "钻型鬈发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "dreadlocks",
+      "cnName": "脏辫刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "dread bun",
+      "cnName": "脏辫包子头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "emo",
+      "cnName": "厚重长刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "emo left",
+      "cnName": "左偏厚重长刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "emo right",
+      "cnName": "右偏厚重长刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "flat",
+      "cnName": "平直刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "framed",
+      "cnName": "脸部修饰",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "fro",
+      "cnName": "蓬松刘海",
+      "files": ["chest", "feet", "mask", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "front braids",
+      "cnName": "前编发辫 ",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "hime",
+      "cnName": "公主切",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "loose",
+      "cnName": "松散",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "messy",
+      "cnName": "凌乱",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "messy curls",
+      "cnName": "凌乱卷发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "middlepart",
+      "cnName": "中分",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "milkmaid",
+      "cnName": "奶油辫",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "mohawk",
+      "cnName": "莫西干头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "overgrown",
+      "cnName": "过长刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "parted",
+      "cnName": "三七分",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "princess wave",
+      "cnName": "公主卷",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "quiff",
+      "cnName": "飞机头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ringlet curl",
+      "cnName": "环状小卷发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ringlets",
+      "cnName": "小卷发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "ruffled",
+      "cnName": "蓬乱",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sectioned",
+      "cnName": "分层刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sidecut",
+      "cnName": "单侧剃刀",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sideswept braid",
+      "cnName": "斜编发辫",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "side-pinned",
+      "cnName": "单侧别发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "short air vents",
+      "cnName": "短通风式",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "sleek",
+      "cnName": "顺滑",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "split",
+      "cnName": "分叉刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "straight",
+      "cnName": "直发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "straight curl",
+      "cnName": "直卷发刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "straight tails",
+      "cnName": "直马尾",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "swept back",
+      "cnName": "大背头",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "swept left",
+      "cnName": "左侧梳发",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "thin flaps",
+      "cnName": "薄刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "tied back",
+      "cnName": "束发刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "trident",
+      "cnName": "三叉刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "wide flaps",
+      "cnName": "厚刘海",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    },
+    {
+      "name": "loose antenna",
+      "cnName": "带呆毛的松散发型",
+      "files": ["chest", "feet", "navel", "short", "shoulder", "thighs"]
+    }
+  ],
+  "hairLengthLabels": {
+    "short": "短",
+    "shoulder": "及肩",
+    "chest": "到胸",
+    "navel": "到腹",
+    "waist": "到腰",
+    "thighs": "到大腿",
+    "feet": "到脚"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "demeanor": ["aloof", "catty", "default", "foxy", "gloomy", "sweet"],
+  "demeanorCn": {
+    "default": "温柔",
+    "aloof": "高冷",
+    "catty": "妩媚",
+    "sweet": "甜美",
+    "foxy": "勾人",
+    "gloomy": "忧郁"
+  },
+  "demeanorEn": {
+    "温柔": "default",
+    "高冷": "aloof",
+    "妩媚": "catty",
+    "甜美": "sweet",
+    "勾人": "foxy",
+    "忧郁": "gloomy"
+  },
+  "eyeLayers": [
+    "eyelids",
+    "eyelids-half-closed",
+    "eyes",
+    "iris",
+    "iris-empty",
+    "iris-empty-half-closed",
+    "iris-half-closed",
+    "lashes",
+    "lashes-half-closed",
+    "sclera",
+    "sclera-bloodshot"
+  ],
+  "commonLayers": {
+    "mouth": ["chew", "cry", "frown", "neutral", "smile"],
+    "lipstick": ["chew", "cry", "frown", "neutral", "smile"],
+    "blush": [1, 2, 3, 4, 5],
+    "tears": [1, 2, 3, 4],
+    "brow": ["low", "mid", "orgasm", "top"],
+    "other": []
+  },
+  "browsMap": {
+    "低": "low",
+    "中": "mid",
+    "高": "top",
+    "高潮": "orgasm"
+  },
+  "mouthMap": {
+    "平静": "neutral",
+    "微笑": "smile",
+    "皱眉": "frown",
+    "哭泣": "cry",
+    "咀嚼": "chew"
+  }
+}

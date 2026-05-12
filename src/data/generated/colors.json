@@ -1,0 +1,946 @@
+{
+  "hair": [
+    {
+      "variable": "red",
+      "name": "red",
+      "cnName": "红色",
+      "filter": {
+        "blend": "#f53d43"
+      }
+    },
+    {
+      "variable": "jetblack",
+      "name": "jet black",
+      "cnName": "乌黑色",
+      "filter": {
+        "blend": "#454545",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "black",
+      "name": "black",
+      "cnName": "黑色",
+      "filter": {
+        "blend": "#504949",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "blond",
+      "name": "blond",
+      "cnName": "浅金色",
+      "filter": {
+        "blend": "#d5b43f"
+      }
+    },
+    {
+      "variable": "softblond",
+      "name": "soft blond",
+      "cnName": "柔金色",
+      "filter": {
+        "blend": "#d1b761"
+      }
+    },
+    {
+      "variable": "platinumblond",
+      "name": "platinum blond",
+      "cnName": "白金色",
+      "filter": {
+        "blend": "#ead27b"
+      }
+    },
+    {
+      "variable": "golden",
+      "name": "golden",
+      "cnName": "金黄色",
+      "filter": {
+        "blend": "#ffc800"
+      }
+    },
+    {
+      "variable": "ashyblond",
+      "name": "ashy blond",
+      "cnName": "灰金色",
+      "filter": {
+        "blend": "#b19981"
+      }
+    },
+    {
+      "variable": "strawberryblond",
+      "name": "strawberry blond",
+      "cnName": "草莓金",
+      "filter": {
+        "blend": "#eb9e47"
+      }
+    },
+    {
+      "variable": "darkbrown",
+      "name": "dark brown",
+      "cnName": "深棕色",
+      "filter": {
+        "blend": "#784a3a",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "brown",
+      "name": "brown",
+      "cnName": "棕色",
+      "filter": {
+        "blend": "#8f6e56",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "softbrown",
+      "name": "soft brown",
+      "cnName": "柔褐色",
+      "filter": {
+        "blend": "#bf7540",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "lightbrown",
+      "name": "light brown",
+      "cnName": "浅棕色",
+      "filter": {
+        "blend": "#e49b67",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "burntorange",
+      "name": "burnt orange",
+      "cnName": "焦橙色",
+      "filter": {
+        "blend": "#e08d52",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "ginger",
+      "name": "ginger",
+      "cnName": "姜黄色",
+      "filter": {
+        "blend": "#ff6a00"
+      }
+    },
+    {
+      "variable": "bloodorange",
+      "name": "blood orange",
+      "cnName": "血橙色",
+      "filter": {
+        "blend": "#ff4000"
+      }
+    },
+    {
+      "variable": "blue",
+      "name": "blue",
+      "cnName": "蓝色",
+      "filter": {
+        "blend": "#3973ac",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "deepblue",
+      "name": "deep blue",
+      "cnName": "深蓝色",
+      "filter": {
+        "blend": "#1349b5",
+        "brightness": -0.3
+      }
+    },
+    {
+      "variable": "neonblue",
+      "name": "neon blue",
+      "cnName": "霓虹蓝",
+      "filter": {
+        "blend": "#00d5ff"
+      }
+    },
+    {
+      "variable": "green",
+      "name": "green",
+      "cnName": "绿色",
+      "filter": {
+        "blend": "#007400"
+      }
+    },
+    {
+      "variable": "darklime",
+      "name": "dark lime",
+      "cnName": "暗绿黄色",
+      "filter": {
+        "blend": "#4a8000"
+      }
+    },
+    {
+      "variable": "toxicgreen",
+      "name": "toxic green",
+      "cnName": "荧光绿",
+      "filter": {
+        "blend": "#99e600"
+      }
+    },
+    {
+      "variable": "teal",
+      "name": "teal",
+      "cnName": "蓝绿色",
+      "filter": {
+        "blend": "#008040"
+      }
+    },
+    {
+      "variable": "pink",
+      "name": "pink",
+      "cnName": "粉色",
+      "filter": {
+        "blend": "#e05281"
+      }
+    },
+    {
+      "variable": "brightpink",
+      "name": "bright pink",
+      "cnName": "亮粉色",
+      "filter": {
+        "blend": "#ff80aa"
+      }
+    },
+    {
+      "variable": "hotpink",
+      "name": "hot pink",
+      "cnName": "艳粉色",
+      "filter": {
+        "blend": "#ff4dc4"
+      }
+    },
+    {
+      "variable": "softpink",
+      "name": "soft pink",
+      "cnName": "柔粉色",
+      "filter": {
+        "blend": "#d6855c",
+        "brightness": 0.2
+      }
+    },
+    {
+      "variable": "crimson",
+      "name": "crimson",
+      "cnName": "绯红色",
+      "filter": {
+        "blend": "#b30000"
+      }
+    },
+    {
+      "variable": "purple",
+      "name": "purple",
+      "cnName": "紫色",
+      "filter": {
+        "blend": "#6a0d89"
+      }
+    },
+    {
+      "variable": "mediumpurple",
+      "name": "medium purple",
+      "cnName": "中紫色",
+      "filter": {
+        "blend": "#5113df"
+      }
+    },
+    {
+      "variable": "brightpurple",
+      "name": "bright purple",
+      "cnName": "亮紫色",
+      "filter": {
+        "blend": "#ab66ff"
+      }
+    },
+    {
+      "variable": "white",
+      "name": "white",
+      "cnName": "白色",
+      "filter": {
+        "blend": "#BBBBBB",
+        "brightness": 0.3
+      }
+    },
+    {
+      "variable": "snowwhite",
+      "name": "snow white",
+      "cnName": "雪白色",
+      "filter": {
+        "blend": "#FFFFFF"
+      }
+    }
+  ],
+  "eyes": [
+    {
+      "variable": "purple",
+      "name": "purple",
+      "cnName": "紫色",
+      "filter": {
+        "blend": "#b016d8"
+      }
+    },
+    {
+      "variable": "dark blue",
+      "name": "dark blue",
+      "cnName": "深蓝色",
+      "filter": {
+        "blend": "#3b6ba4"
+      }
+    },
+    {
+      "variable": "light blue",
+      "name": "light blue",
+      "cnName": "浅蓝色",
+      "filter": {
+        "blend": "#00D9F7"
+      }
+    },
+    {
+      "variable": "amber",
+      "name": "amber",
+      "cnName": "琥珀色",
+      "filter": {
+        "blend": "#f6ca70"
+      }
+    },
+    {
+      "variable": "hazel",
+      "name": "hazel",
+      "cnName": "榛子色",
+      "filter": {
+        "blend": "#917742"
+      }
+    },
+    {
+      "variable": "green",
+      "name": "green",
+      "cnName": "绿色",
+      "filter": {
+        "blend": "#95b521"
+      }
+    },
+    {
+      "variable": "lime green",
+      "name": "lime green",
+      "cnName": "柠檬绿",
+      "filter": {
+        "blend": "#3ae137"
+      }
+    },
+    {
+      "variable": "light green",
+      "name": "light green",
+      "cnName": "浅绿色",
+      "filter": {
+        "blend": "#D5F075"
+      }
+    },
+    {
+      "variable": "red",
+      "name": "red",
+      "cnName": "红色",
+      "filter": {
+        "blend": "#f45b08"
+      }
+    },
+    {
+      "variable": "pink",
+      "name": "pink",
+      "cnName": "粉色",
+      "filter": {
+        "blend": "#F76EF7"
+      }
+    },
+    {
+      "variable": "grey",
+      "name": "grey",
+      "cnName": "灰色",
+      "filter": {
+        "blend": "#a9a9a9"
+      }
+    },
+    {
+      "variable": "light grey",
+      "name": "light grey",
+      "cnName": "浅灰色",
+      "filter": {
+        "blend": "#d1d1d1"
+      }
+    },
+    {
+      "variable": "colorWheelTemporary0",
+      "name": "colorWheelTemporary0",
+      "cnName": "灰白色",
+      "filter": {
+        "blend": "#d1d1d1"
+      }
+    },
+    {
+      "variable": "colorWheelTemporary1",
+      "name": "colorWheelTemporary1",
+      "cnName": "灰白色",
+      "filter": {
+        "blend": "#d1d1d1"
+      }
+    },
+    {
+      "variable": "red possessed",
+      "name": "red possessed",
+      "cnName": "鲜红色",
+      "filter": {
+        "blend": "#f40101"
+      }
+    },
+    {
+      "variable": "blue possessed",
+      "name": "blue possessed",
+      "cnName": "布蓝色",
+      "filter": {
+        "blend": "#0F52BA"
+      }
+    }
+  ],
+  "clothes": [
+    {
+      "variable": "blue",
+      "name": "blue",
+      "cnName": "蓝色",
+      "filter": {
+        "blend": "#0132ff"
+      }
+    },
+    {
+      "variable": "lake blue",
+      "name": "lake blue",
+      "cnName": "湖蓝色",
+      "filter": {
+        "blend": "#223d8f"
+      }
+    },
+    {
+      "variable": "light blue",
+      "name": "light blue",
+      "cnName": "浅蓝色",
+      "filter": {
+        "blend": "#559BC0"
+      }
+    },
+    {
+      "variable": "neon blue",
+      "name": "neon blue",
+      "cnName": "霓虹蓝",
+      "filter": {
+        "blend": "#00d5ff"
+      }
+    },
+    {
+      "variable": "white",
+      "name": "white",
+      "cnName": "白色",
+      "filter": {
+        "blend": "#ffffff"
+      }
+    },
+    {
+      "variable": "purest white",
+      "name": "purest white",
+      "cnName": "纯净白",
+      "filter": {
+        "blend": "#ffffff"
+      }
+    },
+    {
+      "variable": "pale white",
+      "name": "pale white",
+      "cnName": "苍白色",
+      "filter": {
+        "blend": "#eeeeee",
+        "contrast": 1.1
+      }
+    },
+    {
+      "variable": "red",
+      "name": "red",
+      "cnName": "红色",
+      "filter": {
+        "blend": "#ff0000"
+      }
+    },
+    {
+      "variable": "jewel red",
+      "name": "jewel red",
+      "cnName": "宝石红",
+      "filter": {
+        "blend": "#d4273b"
+      }
+    },
+    {
+      "variable": "green",
+      "name": "green",
+      "cnName": "绿色",
+      "filter": {
+        "blend": "#00aa00"
+      }
+    },
+    {
+      "variable": "light green",
+      "name": "light green",
+      "cnName": "浅绿色",
+      "filter": {
+        "blend": "#72AC72"
+      }
+    },
+    {
+      "variable": "forest green",
+      "name": "forest green",
+      "cnName": "森林绿",
+      "filter": {
+        "blend": "#374f2f"
+      }
+    },
+    {
+      "variable": "lime",
+      "name": "lime",
+      "cnName": "酸橙色",
+      "filter": {
+        "blend": "#38B20A"
+      }
+    },
+    {
+      "variable": "black",
+      "name": "black",
+      "cnName": "黑色",
+      "filter": {
+        "blend": "#353535"
+      }
+    },
+    {
+      "variable": "confessor black",
+      "name": "confessor black",
+      "cnName": "忏悔黑",
+      "filter": {
+        "blend": "#353535"
+      }
+    },
+    {
+      "variable": "pink",
+      "name": "pink",
+      "cnName": "粉色",
+      "filter": {
+        "blend": "#fe3288"
+      }
+    },
+    {
+      "variable": "light pink",
+      "name": "light pink",
+      "cnName": "浅粉色",
+      "filter": {
+        "blend": "#d67caf"
+      }
+    },
+    {
+      "variable": "hospital pink",
+      "name": "hospital pink",
+      "cnName": "医院粉",
+      "filter": {
+        "blend": "#fe8b90"
+      }
+    },
+    {
+      "variable": "purple",
+      "name": "purple",
+      "cnName": "紫色",
+      "filter": {
+        "blend": "#8f09f3"
+      }
+    },
+    {
+      "variable": "lilac",
+      "name": "lilac",
+      "cnName": "丁香紫",
+      "filter": {
+        "blend": "#d692fc"
+      }
+    },
+    {
+      "variable": "witchbloom",
+      "name": "witchbloom",
+      "cnName": "巫花",
+      "filter": {
+        "blend": "#743499"
+      }
+    },
+    {
+      "variable": "violet",
+      "name": "violet",
+      "cnName": "罗兰紫",
+      "filter": {
+        "blend": "#c42eff"
+      }
+    },
+    {
+      "variable": "tangerine",
+      "name": "tangerine",
+      "cnName": "柑橘色",
+      "filter": {
+        "blend": "#ff6f00"
+      }
+    },
+    {
+      "variable": "pale tangerine",
+      "name": "pale tangerine",
+      "cnName": "浅橘色",
+      "filter": {
+        "blend": "#ff3300"
+      }
+    },
+    {
+      "variable": "teal",
+      "name": "teal",
+      "cnName": "蓝绿色",
+      "filter": {
+        "blend": "#2bcece"
+      }
+    },
+    {
+      "variable": "yellow",
+      "name": "yellow",
+      "cnName": "黄色",
+      "filter": {
+        "blend": "#ffdd33",
+        "brightness": 0.2
+      }
+    },
+    {
+      "variable": "pale yellow",
+      "name": "pale yellow",
+      "cnName": "淡黄色",
+      "filter": {
+        "blend": "#ffaa00"
+      }
+    },
+    {
+      "variable": "brown",
+      "name": "brown",
+      "cnName": "棕色",
+      "filter": {
+        "blend": "#703000"
+      }
+    },
+    {
+      "variable": "bucket brown",
+      "name": "bucket brown",
+      "cnName": "桶棕色",
+      "filter": {
+        "blend": "#87634a"
+      }
+    },
+    {
+      "variable": "soft brown",
+      "name": "soft brown",
+      "cnName": "柔褐色",
+      "filter": {
+        "blend": "#6a4225"
+      }
+    },
+    {
+      "variable": "light brown",
+      "name": "light brown",
+      "cnName": "浅棕色",
+      "filter": {
+        "blend": "#87634a"
+      }
+    },
+    {
+      "variable": "tan",
+      "name": "tan",
+      "cnName": "浅褐色",
+      "filter": {
+        "blend": "#c3ad91"
+      }
+    },
+    {
+      "variable": "khaki",
+      "name": "khaki",
+      "cnName": "卡其色",
+      "filter": {
+        "blend": "#c89673"
+      }
+    },
+    {
+      "variable": "fleshy",
+      "name": "fleshy",
+      "cnName": "肉色",
+      "filter": {
+        "blend": "#ffddc8"
+      }
+    },
+    {
+      "variable": "grey",
+      "name": "grey",
+      "cnName": "灰色",
+      "filter": {
+        "blend": "#b5aea6"
+      }
+    },
+    {
+      "variable": "sand",
+      "name": "sand",
+      "cnName": "浅黄灰",
+      "filter": {
+        "blend": "#ebd1ad"
+      }
+    },
+    {
+      "variable": "off-white",
+      "name": "off-white",
+      "cnName": "米色",
+      "filter": {
+        "blend": "#ecece8"
+      }
+    },
+    {
+      "variable": "navy",
+      "name": "navy",
+      "cnName": "藏青色",
+      "filter": {
+        "blend": "#292934"
+      }
+    },
+    {
+      "variable": "navy blue",
+      "name": "navy blue",
+      "cnName": "海军蓝",
+      "filter": {
+        "blend": "#16168d"
+      }
+    },
+    {
+      "variable": "denim",
+      "name": "denim",
+      "cnName": "牛仔蓝",
+      "filter": {
+        "blend": "#4b6e85"
+      }
+    },
+    {
+      "variable": "olive",
+      "name": "olive",
+      "cnName": "橄榄绿",
+      "filter": {
+        "blend": "#5f5a44"
+      }
+    },
+    {
+      "variable": "wine",
+      "name": "wine",
+      "cnName": "酒红色",
+      "filter": {
+        "blend": "#65252d"
+      }
+    },
+    {
+      "variable": "blood moon red",
+      "name": "blood moon red",
+      "cnName": "血月红",
+      "filter": {
+        "blend": "#5c0707"
+      }
+    },
+    {
+      "variable": "branded red",
+      "name": "branded red",
+      "cnName": "烙印红",
+      "filter": {
+        "blend": "#d4273b"
+      }
+    },
+    {
+      "variable": "russet",
+      "name": "russet",
+      "cnName": "黄褐色",
+      "filter": {
+        "blend": "#9f4033"
+      }
+    },
+    {
+      "variable": "apocalypse",
+      "name": "apocalypse",
+      "cnName": "浓咖色",
+      "filter": {
+        "blend": "#5c271d"
+      }
+    },
+    {
+      "variable": "steel",
+      "name": "steel",
+      "cnName": "银灰色",
+      "filter": {
+        "blend": "#999999"
+      }
+    },
+    {
+      "variable": "blue steel",
+      "name": "blue steel",
+      "cnName": "蓝钢色",
+      "filter": {
+        "blend": "#646e82"
+      }
+    },
+    {
+      "variable": "bronze",
+      "name": "bronze",
+      "cnName": "古铜色",
+      "filter": {
+        "blend": "#cd9932"
+      }
+    },
+    {
+      "variable": "rose gold",
+      "name": "rose gold",
+      "cnName": "玫瑰金",
+      "filter": {
+        "blend": "#dea193",
+        "brightness": 0.15
+      }
+    },
+    {
+      "variable": "gold",
+      "name": "gold",
+      "cnName": "金色",
+      "filter": {
+        "blend": "#ffbf00",
+        "brightness": 0.1
+      }
+    },
+    {
+      "variable": "virgo gold",
+      "name": "virgo gold",
+      "cnName": "维戈金",
+      "filter": {
+        "blend": "#ffbf00",
+        "brightness": 0.1
+      }
+    },
+    {
+      "variable": "silver",
+      "name": "silver",
+      "cnName": "银色",
+      "filter": {
+        "blend": "#C0C0C0"
+      }
+    },
+    {
+      "variable": "sterling silver",
+      "name": "sterling silver",
+      "cnName": "银色",
+      "filter": {
+        "blend": "#8b9fc4"
+      }
+    },
+    {
+      "variable": "shackle silver",
+      "name": "shackle silver",
+      "cnName": "枷锁银",
+      "filter": {
+        "blend": "#8b9fc4"
+      }
+    }
+  ],
+  "skin": {
+    "light": {
+      "gradient": ["#ffffff", "#ffd2ac"],
+      "blendMode": "multiply"
+    },
+    "medium": {
+      "gradient": ["#ffd2ac", "#8a614d"],
+      "blendMode": "multiply"
+    },
+    "dark": {
+      "gradient": ["#8a614d", "#39241a"],
+      "blendMode": "multiply"
+    },
+    "gyaru": {
+      "gradient": ["#ffffff", "#ffd2ac", "#8a614d", "#39241a"],
+      "blendMode": "multiply"
+    },
+    "ylight": {
+      "gradient": ["#f0ffe6", "#f0e4bc"],
+      "blendMode": "multiply"
+    },
+    "ymedium": {
+      "gradient": ["#f0e4bc", "#8e7f68"],
+      "blendMode": "multiply"
+    },
+    "ydark": {
+      "gradient": ["#8e7f68", "#483f35"],
+      "blendMode": "multiply"
+    },
+    "ygyaru": {
+      "gradient": ["#f0ffe6", "#f0e4bc", "#8e7f68", "#483f35"],
+      "blendMode": "multiply"
+    },
+    "glight": {
+      "gradient": ["#fdf4d7", "#ffc482"],
+      "blendMode": "multiply"
+    },
+    "gmedium": {
+      "gradient": ["#ffc482", "#9a6b36"],
+      "blendMode": "multiply"
+    },
+    "gdark": {
+      "gradient": ["#9a6b36", "#513400"],
+      "blendMode": "multiply"
+    },
+    "ggyaru": {
+      "gradient": ["#fdf4d7", "#ffc482", "#9a6b36", "#513400"],
+      "blendMode": "multiply"
+    },
+    "rlight": {
+      "gradient": ["#f7e4e0", "#ebae8a"],
+      "blendMode": "multiply"
+    },
+    "rmedium": {
+      "gradient": ["#ebae8a", "#8d5244"],
+      "blendMode": "multiply"
+    },
+    "rdark": {
+      "gradient": ["#8d5244", "#482616"],
+      "blendMode": "multiply"
+    },
+    "rgyaru": {
+      "gradient": ["#f7e4e0", "#ebae8a", "#8d5244", "#482616"],
+      "blendMode": "multiply"
+    },
+    "blight": {
+      "gradient": ["#ecf1f9", "#dcc6c6"],
+      "blendMode": "multiply"
+    },
+    "bmedium": {
+      "gradient": ["#dcc6c6", "#917376"],
+      "blendMode": "multiply"
+    },
+    "bdark": {
+      "gradient": ["#917376", "#402f31"],
+      "blendMode": "multiply"
+    },
+    "bgyaru": {
+      "gradient": ["#ecf1f9", "#dcc6c6", "#917376", "#402f31"],
+      "blendMode": "multiply"
+    },
+    "ghost": {
+      "gradient": ["#ffffff", "#ffffff"],
+      "blendMode": "multiply"
+    },
+    "wraith": {
+      "gradient": ["#ffffff", "#ffffff"],
+      "blendMode": "multiply"
+    }
+  }
+}
