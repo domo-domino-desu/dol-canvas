@@ -1,0 +1,52 @@
+{
+  "clothingTags": {
+    "upper": {
+      "schoolblouse": ["school_blouse"],
+      "serafuku": ["serafuku_upper"],
+      "dressshirt": ["dress_shirt"]
+    },
+    "lower": {
+      "pinafore": ["pinafore"],
+      "plaid pinafore": ["pinafore"]
+    },
+    "neck": {
+      "serafuku ribbon": ["serafuku_neckwear"]
+    }
+  },
+  "hairMaskProfiles": {
+    "curly pigtails": "ponytail",
+    "fluffy ponytail": "ponytail",
+    "thick sidetail": "ponytail",
+    "thick twintails": "ponytail",
+    "ribbon tail": "ponytail",
+    "thick ponytail": "ponytail",
+    "half-up": "ponytail",
+    "scorpion tails": "ponytail",
+    "thick pigtails": "ponytail"
+  },
+  "transformationFilters": {
+    "demon": {
+      "fixed": {
+        "parts": ["wings-idle", "tail-idle", "horns"],
+        "filter": {
+          "blend": "hsl(275, 100%, 30%)",
+          "blendMode": "hard-light",
+          "brightness": 0,
+          "desaturate": false
+        }
+      }
+    },
+    "cat": {
+      "inheritHair": ["ears", "tail-idle", "cheeks"]
+    },
+    "wolf": {
+      "inheritHair": ["ears", "tail-idle", "cheeks"]
+    },
+    "fox": {
+      "inheritHair": ["ears", "tail-idle", "cheeks"]
+    },
+    "bird": {
+      "inheritHair": ["wings-idle", "tail-idle", "feathers"]
+    }
+  }
+}

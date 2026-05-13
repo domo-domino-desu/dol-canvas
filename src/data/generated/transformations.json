@@ -60,7 +60,7 @@
     }
   },
   "bird": {
-    "cnName": "鸟",
+    "cnName": "鹰",
     "label": "鹰",
     "parts": {
       "eyes": ["default"],

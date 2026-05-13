@@ -1,17 +1,97 @@
-import type { LayerSpec, BuildContext } from "@/types";
+import type { LayerSpec } from "@/types";
+import type { ResolvedState } from "@/character/state";
 import { Z } from "@/data/zindex";
 import { i18nData } from "@/data/generated";
+import { materialFilter } from "@/character/material";
 
 type I18nEntry = { en: string };
 const bodyShapes = (i18nData as typeof i18nData).bodyShapes as Record<string, I18nEntry>;
 const BREATH = "playerBreath";
 
+const cumSprites = {
+  胸部: ["", "1", "2", "3", "4", "4"],
+  脸: ["", "1", "1", "2", "2", "3"],
+  脚: ["", "", "1", "1", "2", "2"],
+  左臂: ["", "1", "1", "1", "2", "2"],
+  右臂: ["", "1", "1", "1", "2", "2"],
+  颈部: ["", "1", "1", "2", "2", "3"],
+  大腿: ["", "1", "2", "3", "4", "5"],
+  腹部: ["", "1", "2", "3", "4", "5"],
+} as const;
+
+const dripSprites = ["", "start", "very-slow", "slow", "fast", "very-fast"] as const;
+
 export function resolveBodyShape(cn?: string): string {
   return bodyShapes[cn ?? "经典"]?.en ?? "classic";
 }
 
-export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
-  const { payload, baseUrl, bodyShape, breastSize } = ctx;
+function clampInt(value: number | undefined, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.floor(value ?? 0)));
+}
+
+function addCumLayers(layers: LayerSpec[], state: ResolvedState): void {
+  const { payload, baseUrl } = state;
+  const cum = payload.精液;
+  if (!cum) return;
+
+  const simple = [
+    ["胸部", "chest", Z.TEARS],
+    ["脸", "face", Z.TEARS],
+    ["脚", "feet", Z.TEARS],
+    ["颈部", "neck", Z.TEARS],
+    ["大腿", "thighs", Z.TEARS],
+    ["腹部", "tummy", Z.TEARS],
+  ] as const;
+
+  for (const [cn, file, z] of simple) {
+    const sprite = cumSprites[cn][clampInt(cum[cn], 0, 5)];
+    if (sprite)
+      layers.push({
+        id: `cum-${file}`,
+        src: `${baseUrl}body/cum/${file}-${sprite}.png`,
+        z,
+        animation: BREATH,
+      });
+  }
+
+  const left = cumSprites.左臂[clampInt(cum.左臂, 0, 5)];
+  if (left && state.leftArm !== "cover") {
+    layers.push({
+      id: "cum-left-arm",
+      src: `${baseUrl}body/cum/left-arm-${left}.png`,
+      z: Z.ARMS_IDLE_CUM,
+      animation: BREATH,
+    });
+  }
+  const right = cumSprites.右臂[clampInt(cum.右臂, 0, 5)];
+  if (right && state.rightArm !== "cover" && state.rightArm !== "hold") {
+    layers.push({
+      id: "cum-right-arm",
+      src: `${baseUrl}body/cum/right-arm-${right}.png`,
+      z: Z.ARMS_IDLE_CUM,
+      animation: BREATH,
+    });
+  }
+
+  const drips = [
+    ["阴道滴落", "vaginal", Z.TEARS],
+    ["肛门滴落", "anal", Z.TEARS],
+    ["口部滴落", "mouth", Z.TEARS],
+  ] as const;
+  for (const [cn, file, z] of drips) {
+    const sprite = dripSprites[clampInt(cum[cn], 0, 5)];
+    if (sprite)
+      layers.push({
+        id: `drip-${file}`,
+        src: `${baseUrl}body/cum/${file}-${sprite}.png`,
+        z,
+        animation: BREATH,
+      });
+  }
+}
+
+export function buildBodyLayers(state: ResolvedState): LayerSpec[] {
+  const { payload, baseUrl, bodyShape, breastSize } = state;
   const p = payload;
   const layers: LayerSpec[] = [];
   const b = baseUrl;
@@ -26,7 +106,7 @@ export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
   });
 
   // ── Left arm ──────────────────────────────────────────────────────────────
-  const leftArm = p.左臂 ?? "idle";
+  const leftArm = state.leftArm;
   layers.push({
     id: "left-arm",
     src:
@@ -38,7 +118,7 @@ export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
   });
 
   // ── Right arm ─────────────────────────────────────────────────────────────
-  const rightArm = p.右臂 ?? "idle";
+  const rightArm = state.rightArm;
   layers.push({
     id: "right-arm",
     src:
@@ -47,7 +127,7 @@ export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
         : rightArm === "hold"
           ? `${b}body/right-arm-hold.png`
           : `${b}body/right-arm-idle-${bodyShape}.png`,
-    z: rightArm === "idle" ? Z.ARMS_IDLE : Z.ARMS_COVER + 1,
+    z: rightArm === "idle" ? Z.ARMS_IDLE : Z.RIGHT_COVER_ARM,
     animation: BREATH,
   });
 
@@ -62,12 +142,12 @@ export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
   }
 
   // ── Pregnant belly ────────────────────────────────────────────────────────
-  const belly = p.孕肚 ?? 0;
+  const belly = state.belly;
   if (belly >= 1 && belly <= 24) {
     layers.push({
       id: "pregnant-belly",
       src: `${b}body/pregnant-belly/${belly}.png`,
-      z: 33,
+      z: Z.BELLY_BASE,
       animation: BREATH,
     });
   }
@@ -85,7 +165,19 @@ export function buildBodyLayers(ctx: BuildContext): LayerSpec[] {
       z: Z.GENITALS,
       animation: BREATH,
     });
+    if (p.避孕套?.类型 === "plain") {
+      layers.push({
+        id: "penis-condom",
+        src: `${b}body/penis/condom-${pState}-${pSize}.png`,
+        z: Z.UNDER_PARASITE,
+        alpha: 0.4,
+        filter: materialFilter("cloth", p.避孕套.颜色),
+        animation: BREATH,
+      });
+    }
   }
+
+  addCumLayers(layers, state);
 
   return layers;
 }

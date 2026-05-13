@@ -5,7 +5,7 @@
 默认资源地址使用 cdn.jsdelivr CDN：
 
 ```text
-https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/
+https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@0.1.7/img/
 ```
 
 ## Vue 使用
@@ -28,6 +28,7 @@ const payload: CharacterPayload = {
     发型: "自然状态",
     长度: "及肩",
     刘海: "自然状态",
+    位置: "后",
   },
   发色: "红色",
   仪态: "温柔",
@@ -115,6 +116,9 @@ DolCanvas.configure({
 - `右臂`：`idle`、`cover`、`hold`
 - `发型`：可以是字符串，也可以是 `{ 发型, 长度, 刘海 }`
 - `发色`：使用内置发色中文名
+- `发色模式`：`单色`、`整体`、`拆分`；默认 `单色`
+- `发色详情`：多色发色配置，格式为 `{ 头发: { 分色模式, 发色, 第二发色 }, 刘海? }`
+- `头发位置` / `发型.位置`：侧发层级，`后` 为原版默认，`前` 对应原版 hair forward
 - `眼睛`：只使用 `左眼瞳色`、`右眼瞳色`
 - `衣物`：按槽位填写，例如 `上装`、`下装`、`内衣下装`、`头饰`、`鞋子`、`腿饰`
 

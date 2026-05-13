@@ -1,254 +1,448 @@
-import type { LayerSpec, BuildContext, ClothingWorn, ColorFilter } from "@/types";
-import { Z } from "@/data/zindex";
-import { clothesData, colorsData } from "@/data/generated";
+import type { LayerSpec, ClothingWorn, ColorFilter } from "@/types";
+import { Z, Z_OFFSET } from "@/data/zindex";
+import type { ResolvedClothing, ResolvedState } from "@/character/state";
+import { SLOTS, clothFilter, type ClothingItem } from "@/character/render-catalog";
+import {
+  accessoryStem,
+  armAccFileForWorn,
+  armPoseFile,
+  availableStem,
+  backStem,
+  breastAccStem,
+  breastDetailStem,
+  breastStem,
+  branchSuffix,
+  clothingMaskSrc,
+  detailStem,
+  handPoseFile,
+  lowerAccessoryStem,
+  mainStem,
+  patternPart,
+  slotAccessoryStem,
+} from "@/character/asset-resolver";
+import { pushLayer, sleeveZ, zFor } from "@/character/layer-compiler";
 
-type ClothingItem = {
-  name: string;
-  cnName: string;
-  colorOptions: string[];
-  accColorOptions: string[];
-  patternOptions?: string[];
-  patternLayer?: string;
-  states: string[];
-  numeric: string[];
-  armVariants: string[];
-  hasAcc: boolean;
-  accessoryIntegrityImg?: boolean;
-  mainImage?: number;
-  accImage?: number;
-  sleeveImg?: boolean;
-  sleeveAccImg?: boolean;
-};
-type ClothesJson = typeof clothesData;
-type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
-
-const clothColors: ColorEntry[] = (colorsData as typeof colorsData).clothes as ColorEntry[];
-const BREATH = "playerBreath";
-
-// Slot CN name → { zIndex, imgDir, data[] }
-const SLOTS: Array<{ cn: string; z: number; dir: string; data: ClothingItem[] }> = [
-  { cn: "上装", z: Z.UPPER, dir: "upper", data: (clothesData as ClothesJson).upper },
-  { cn: "下装", z: Z.LOWER, dir: "lower", data: (clothesData as ClothesJson).lower },
-  {
-    cn: "内衣上装",
-    z: Z.UNDER_UPPER,
-    dir: "under-upper",
-    data: (clothesData as ClothesJson)["under-upper"],
-  },
-  {
-    cn: "内衣下装",
-    z: Z.UNDER_LOWER,
-    dir: "under-lower",
-    data: (clothesData as ClothesJson)["under-lower"],
-  },
-  { cn: "头饰", z: Z.HEAD, dir: "head", data: (clothesData as ClothesJson).head },
-  { cn: "面饰", z: Z.FACE_WEAR, dir: "face", data: (clothesData as ClothesJson).face },
-  { cn: "颈部", z: Z.NECK, dir: "neck", data: (clothesData as ClothesJson).neck },
-  { cn: "手饰", z: Z.HANDS, dir: "hands", data: (clothesData as ClothesJson).hands },
-  { cn: "手持物品", z: Z.HANDHELD, dir: "handheld", data: (clothesData as ClothesJson).handheld },
-  { cn: "鞋子", z: Z.FEET, dir: "feet", data: (clothesData as ClothesJson).feet },
-  { cn: "腿饰", z: Z.LEGS, dir: "legs", data: (clothesData as ClothesJson).legs },
-  { cn: "私部装备", z: Z.GENITALS, dir: "genitals", data: (clothesData as ClothesJson).genitals },
-];
-
-function clothFilter(cnColorName?: string): ColorFilter | undefined {
-  if (!cnColorName) return undefined;
-  const entry =
-    clothColors.find((e) => e.cnName === cnColorName) ??
-    clothColors.find((e) => e.variable === cnColorName) ??
-    clothColors.find((e) => e.name === cnColorName);
-  if (!entry) return undefined;
-  return { ...entry.filter, blendMode: "hard-light" };
+function bellyClipMask(state: ResolvedState): string | undefined {
+  const belly = state.belly;
+  return belly >= 19 && belly <= 24
+    ? `${state.baseUrl}clothes/belly/mask-clip-${belly}.png`
+    : undefined;
 }
 
-function findItem(data: ClothingItem[], cnName: string): ClothingItem | undefined {
-  return data.find((item) => item.cnName === cnName);
+function bellyMask(state: ResolvedState, item: ClothingItem): string | undefined {
+  const belly = state.belly;
+  if (belly < 15 || belly > 24) return undefined;
+  return item.pregType === "min"
+    ? `${state.baseUrl}clothes/belly/mask-min-${belly}.png`
+    : `${state.baseUrl}clothes/belly/mask-${belly}.png`;
 }
 
-function durabilityState(worn: ClothingWorn): string {
-  const durability = worn.耐久度;
-  if (durability === "完整") return "full";
-  if (durability === "撕裂") return "torn";
-  if (durability === "破旧") return "tattered";
-  if (durability === "磨损") return "frayed";
-  return worn.状态 ?? durability ?? "full";
+function bellyDx(state: ResolvedState): number {
+  const belly = state.belly;
+  if (belly >= 24) return 10;
+  if (belly >= 23) return 8;
+  if (belly >= 22) return 6;
+  if (belly >= 19) return 4;
+  if (belly >= 15) return 2;
+  return 0;
 }
 
-function integrityFile(worn: ClothingWorn, item: ClothingItem): string {
-  const state = durabilityState(worn);
-  if (item.states.includes(state)) return state;
-  return item.states[0] ?? "full";
-}
-
-function armStateFile(ctx: BuildContext, item: ClothingItem): string | undefined {
-  const armFiles = item.armVariants.filter((file) => !file.endsWith("-acc"));
-  if (!armFiles.length) return undefined;
-
-  const rightArm = ctx.payload.右臂 ?? "hold";
-  const rightFile = rightArm === "idle" ? "right-idle" : `right-${rightArm}`;
-  const leftFile = ctx.payload.左臂 === "cover" ? "left-cover" : "left-idle";
-
-  return (
-    armFiles.find((file) => file === rightFile) ??
-    armFiles.find((file) => file === leftFile) ??
-    armFiles[0]
-  );
-}
-
-function armPoseFile(
-  ctx: BuildContext,
+function filterForColourMode(
+  mode: string | number | undefined,
   worn: ClothingWorn,
-  item: ClothingItem,
-  side: "left" | "right",
-): string | undefined {
-  const pose =
-    side === "left"
-      ? ctx.payload.左臂 === "cover"
-        ? "cover"
-        : "idle"
-      : (ctx.payload.右臂 ?? "idle");
-  const base = `${side}-${pose}`;
-  const pattern = item.patternLayer === "primary" ? patternFilePart(worn, item) : "";
-  const variants = item.armVariants.filter((file) => !file.endsWith("-acc"));
+): ColorFilter | undefined {
+  if (mode === "secondary") return clothFilter(worn.第二色调);
+  if (mode === "none" || mode === 0) return undefined;
+  return clothFilter(worn.主色调);
+}
 
-  return (
-    (pattern ? variants.find((file) => file === `${base}${pattern}`) : undefined) ??
-    variants.find((file) => file === base) ??
-    variants.find((file) => file.startsWith(`${base}-`))
+function buildHandheldLayers(
+  state: ResolvedState,
+  resolved: ResolvedClothing,
+  imgBase: string,
+  fallbackZ: number,
+): LayerSpec[] {
+  const layers: LayerSpec[] = [];
+  const { worn, item } = resolved;
+  const rightPose = state.payload.右臂 ?? "hold";
+  const leftPose = state.leftArm;
+  const z = zFor(item, fallbackZ);
+  const filter = clothFilter(worn.主色调);
+  const accFilter = clothFilter(worn.第二色调);
+  const secondary = patternPart(worn, item, "secondary");
+
+  if (item.mainImage !== 0 && (rightPose !== "cover" || item.coverImage !== 0)) {
+    pushLayer(
+      layers,
+      "cloth-手持物品-right",
+      imgBase,
+      availableStem(item, [
+        `right-${rightPose}${branchSuffix(worn, item, "full")}${patternPart(worn, item, "primary")}`,
+        `right-${rightPose}${patternPart(worn, item, "primary")}`,
+        `right-${rightPose}`,
+      ]),
+      z,
+      filter,
+    );
+  }
+  if (
+    item.accessory === 1 &&
+    item.accImage !== 0 &&
+    (rightPose !== "cover" || item.coverImage !== 0)
+  ) {
+    pushLayer(
+      layers,
+      "cloth-手持物品-right-acc",
+      imgBase,
+      availableStem(item, [
+        `right-${rightPose}${branchSuffix(worn, item, "acc")}${secondary}-acc`,
+        `right-${rightPose}${secondary}-acc`,
+        `right-${rightPose}-acc`,
+      ]),
+      z + Z_OFFSET.ACC,
+      accFilter,
+    );
+  }
+  if (item.leftImage === 1) {
+    pushLayer(
+      layers,
+      "cloth-手持物品-left",
+      imgBase,
+      availableStem(item, [
+        `left-${leftPose}${branchSuffix(worn, item, "full")}${patternPart(worn, item, "primary")}`,
+        `left-${leftPose}${patternPart(worn, item, "primary")}`,
+        `left-${leftPose}`,
+      ]),
+      z,
+      filter,
+    );
+    if (item.accessory === 1) {
+      pushLayer(
+        layers,
+        "cloth-手持物品-left-acc",
+        imgBase,
+        availableStem(item, [
+          `left-${leftPose}${branchSuffix(worn, item, "acc")}${secondary}-acc`,
+          `left-${leftPose}${secondary}-acc`,
+          `left-${leftPose}-acc`,
+        ]),
+        z + Z_OFFSET.ACC,
+        accFilter,
+      );
+    }
+  }
+  pushLayer(
+    layers,
+    "cloth-手持物品-back",
+    imgBase,
+    backStem(worn, item),
+    Z.OVER_HEAD_BACK,
+    filterForColourMode(item.backImgColour, worn),
+  );
+  pushLayer(
+    layers,
+    "cloth-手持物品-back-acc",
+    imgBase,
+    backStem(worn, item, true),
+    Z.HEAD_BACK,
+    filterForColourMode(item.backImgAccColour, worn),
+  );
+  return layers;
+}
+
+function clothingMasksForMain(
+  state: ResolvedState,
+  resolved: ResolvedClothing,
+): string[] | undefined {
+  const masks = [
+    clothingMaskSrc(state, resolved.slot.dir, resolved.item, resolved.worn),
+    ...(resolved.slot.cn === "下装" ? (state.masksFor("lower") ?? []) : []),
+    ...(resolved.slot.cn === "腿饰" ? (state.masksFor("legs") ?? []) : []),
+  ].filter((src): src is string => !!src);
+  return masks.length ? masks : undefined;
+}
+
+function breastMasks(state: ResolvedState, resolved: ResolvedClothing): string[] | undefined {
+  const masks = [
+    clothingMaskSrc(state, resolved.slot.dir, resolved.item, resolved.worn),
+    bellyMask(state, resolved.item),
+  ].filter((src): src is string => !!src);
+  return masks.length ? masks : undefined;
+}
+
+type ClothingRenderContext = {
+  state: ResolvedState;
+  resolved: ResolvedClothing;
+  slot: ResolvedClothing["slot"];
+  worn: ClothingWorn;
+  item: ClothingItem;
+  imgBase: string;
+  z: number;
+  filter: ColorFilter | undefined;
+  accFilter: ColorFilter | undefined;
+};
+
+function createRenderContext(
+  state: ResolvedState,
+  resolved: ResolvedClothing,
+): ClothingRenderContext {
+  const { slot, worn, item } = resolved;
+  const imgBase = `${state.baseUrl}clothes/${slot.dir}/${item.name}/`;
+  return {
+    state,
+    resolved,
+    slot,
+    worn,
+    item,
+    imgBase,
+    z: zFor(item, slot.z),
+    filter: clothFilter(worn.主色调),
+    accFilter: clothFilter(worn.第二色调),
+  };
+}
+
+function applyHandLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): boolean {
+  const { state, slot, worn, item, imgBase, filter, accFilter } = ctx;
+  if (slot.cn !== "手饰") return false;
+
+  for (const side of ["left", "right"] as const) {
+    if ((side === "left" && item.leftImage === 0) || (side === "right" && item.rightImage === 0))
+      continue;
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-${side}`,
+      imgBase,
+      handPoseFile(state, worn, item, side),
+      slot.z,
+      filter,
+    );
+    if (item.accessory === 1 && item.accImage !== 0) {
+      pushLayer(
+        layers,
+        `cloth-${slot.cn}-${side}-acc`,
+        imgBase,
+        armAccFileForWorn(state, worn, item, side),
+        slot.z + Z_OFFSET.ACC,
+        accFilter,
+      );
+    }
+  }
+
+  return true;
+}
+
+function applyBackLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { slot, worn, item, imgBase } = ctx;
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-back`,
+    imgBase,
+    backStem(worn, item),
+    Z.OVER_HEAD_BACK,
+    filterForColourMode(item.backImgColour, worn),
+  );
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-back-acc`,
+    imgBase,
+    backStem(worn, item, true),
+    Z.HEAD_BACK,
+    filterForColourMode(item.backImgAccColour, worn),
   );
 }
 
-function handAccessoryFile(
-  ctx: BuildContext,
-  item: ClothingItem,
-  side: "left" | "right",
-): string | undefined {
-  const pose =
-    side === "left"
-      ? ctx.payload.左臂 === "cover"
-        ? "cover"
-        : "idle"
-      : (ctx.payload.右臂 ?? "idle");
-  const base = `${side}-${pose}`;
-  return item.armVariants.find((file) => file === `${base}-acc`);
-}
+function applyMainLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, resolved, slot, item, imgBase, z, filter } = ctx;
 
-function mainClothingFile(ctx: BuildContext, worn: ClothingWorn, item: ClothingItem): string {
-  const integrity = integrityFile(worn, item);
-  if (item.states.includes(integrity)) return integrity;
-  return armStateFile(ctx, item) ?? integrity;
-}
-
-function patternFilePart(worn: ClothingWorn, item: ClothingItem): string {
-  const pattern = worn.图案 ?? worn.花纹 ?? item.patternOptions?.[0];
-  return pattern ? `-${pattern.replace(/ /g, "-")}` : "";
-}
-
-function accessoryFile(ctx: BuildContext, worn: ClothingWorn, item: ClothingItem): string {
-  const pattern = item.patternLayer === "secondary" ? patternFilePart(worn, item) : "";
-  if (item.accessoryIntegrityImg) return `acc-${integrityFile(worn, item)}${pattern}`;
-
-  const armFile = armStateFile(ctx, item);
-  if (armFile && item.armVariants.includes(`${armFile}${pattern}-acc`)) {
-    return `${armFile}${pattern}-acc`;
+  if (item.mainImage !== 0) {
+    const masks = clothingMasksForMain(state, resolved);
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}`,
+      imgBase,
+      mainStem(resolved),
+      z,
+      filter,
+      masks ? { maskSrcs: masks } : undefined,
+    );
   }
-  if (armFile && item.armVariants.includes(`${armFile}-acc`)) return `${armFile}-acc`;
 
-  return `acc${pattern}`;
+  const detail = detailStem(ctx.worn, item);
+  if (detail && item.mainImage !== 0) {
+    pushLayer(layers, `cloth-${slot.cn}-detail`, imgBase, detail, z + Z_OFFSET.DETAIL, filter);
+  }
 }
 
-export function buildClothingLayers(ctx: BuildContext): LayerSpec[] {
-  const { payload, baseUrl, breastSize } = ctx;
-  if (!payload.衣物) return [];
+function applySleeveLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, slot, worn, item, imgBase, filter, accFilter } = ctx;
+  if (slot.cn !== "上装" && slot.cn !== "内衣上装" && slot.cn !== "下装") return;
 
+  for (const side of ["left", "right"] as const) {
+    if ((slot.cn === "上装" || slot.cn === "内衣上装") && item.sleeveImg) {
+      pushLayer(
+        layers,
+        `cloth-${slot.cn}-${side}-sleeve`,
+        imgBase,
+        armPoseFile(state, worn, item, side),
+        sleeveZ(slot.cn, side, state),
+        filterForColourMode(item.sleeveColour, worn) ?? filter,
+      );
+    }
+    if ((slot.cn === "上装" || slot.cn === "内衣上装") && item.sleeveAccImg) {
+      pushLayer(
+        layers,
+        `cloth-${slot.cn}-${side}-sleeve-acc`,
+        imgBase,
+        armAccFileForWorn(state, worn, item, side),
+        sleeveZ(slot.cn, side, state) + Z_OFFSET.SLEEVE_ACC,
+        accFilter,
+      );
+    }
+  }
+}
+
+function applyBreastLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, resolved, slot, worn, item, imgBase, z, filter, accFilter } = ctx;
+  if (slot.cn !== "上装" && slot.cn !== "内衣上装" && slot.cn !== "下装") return;
+
+  const masks = breastMasks(state, resolved);
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-breasts`,
+    imgBase,
+    breastStem(state, worn, item),
+    z + Z_OFFSET.BREASTS,
+    filter,
+    masks ? { maskSrcs: masks } : undefined,
+  );
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-breasts-acc`,
+    imgBase,
+    breastAccStem(state, worn, item),
+    z + Z_OFFSET.ACC,
+    accFilter,
+  );
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-breasts-detail`,
+    imgBase,
+    breastDetailStem(state, worn, item),
+    z + Z_OFFSET.BREASTS_DETAIL,
+    accFilter,
+  );
+}
+
+function applyAccessoryLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { slot, worn, item, imgBase, z, accFilter, resolved } = ctx;
+  if (item.accessory !== 1 || item.accImage === 0) return;
+
+  const accStem = slot.cn === "下装" ? lowerAccessoryStem(resolved) : accessoryStem(worn, item);
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-acc`,
+    imgBase,
+    availableStem(item, [accStem, "acc"]),
+    z + Z_OFFSET.ACC,
+    accFilter,
+  );
+}
+
+function applyBellyLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, resolved, slot, item, imgBase, filter, accFilter } = ctx;
+  if (state.belly <= 7 || !["上装", "下装", "内衣上装", "内衣下装"].includes(slot.cn)) return;
+
+  const stem = mainStem(resolved);
+  const clip =
+    slot.cn === "下装" || slot.cn === "内衣下装" ? bellyClipMask(state) : bellyMask(state, item);
+  pushLayer(layers, `cloth-${slot.cn}-belly`, imgBase, stem, Z.BELLY_CLOTHES, filter, {
+    dx: bellyDx(state),
+    maskSrcs: clip ? [clip] : undefined,
+  });
+  if (item.accessory === 1 && item.accImage !== 0) {
+    const accStem = slotAccessoryStem(slot.cn, resolved);
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-belly-acc`,
+      imgBase,
+      availableStem(item, [accStem, "acc"]),
+      Z.BELLY_CLOTHES_ACC,
+      accFilter,
+      {
+        dx: bellyDx(state),
+        maskSrcs: clip ? [clip] : undefined,
+      },
+    );
+  }
+}
+
+function applyGenitalLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, slot, item, imgBase, filter, accFilter } = ctx;
+  if (!state.payload.阴茎 || (slot.cn !== "下装" && slot.cn !== "内衣下装")) return;
+
+  const bulgeVisible = slot.cn === "下装" ? (state.payload.阴茎大小 ?? 2) >= 4 : true;
+  const hiddenByBelly = state.belly >= 19;
+  if (bulgeVisible && !hiddenByBelly && item.penisImg === 1) {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-penis`,
+      imgBase,
+      "penis",
+      slot.cn === "下装" ? Z.LOWER_TOP : Z.UNDER_LOWER_PENIS,
+      filter,
+    );
+  }
+  if (bulgeVisible && !hiddenByBelly && item.penisAccImg === 1 && item.accessory === 1) {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-penis-acc`,
+      imgBase,
+      "acc-penis",
+      slot.cn === "下装" ? Z.LOWER_TOP_PENIS_ACC : Z.UNDER_LOWER_PENIS_ACC,
+      accFilter,
+    );
+  }
+}
+
+function buildResolvedClothingLayers(
+  state: ResolvedState,
+  resolved: ResolvedClothing,
+): LayerSpec[] {
   const layers: LayerSpec[] = [];
-  const b = baseUrl;
+  const ctx = createRenderContext(state, resolved);
 
-  for (const slotDef of SLOTS) {
-    const worn = payload.衣物[slotDef.cn as keyof typeof payload.衣物];
-    if (!worn) continue;
+  if (ctx.slot.cn === "手持物品")
+    return buildHandheldLayers(state, resolved, ctx.imgBase, ctx.slot.z);
+  if (applyHandLayers(ctx, layers)) return layers;
 
-    const item = findItem(slotDef.data, worn.名称);
-    if (!item) continue;
-
-    const mainFile = mainClothingFile(ctx, worn, item);
-    const filter = clothFilter(worn.主色调);
-    const imgBase = `${b}clothes/${slotDef.dir}/${item.name}/`;
-
-    if (slotDef.cn === "手饰") {
-      for (const side of ["left", "right"] as const) {
-        const file = armPoseFile(ctx, worn, item, side);
-        if (file) {
-          layers.push({
-            id: `cloth-${slotDef.cn}-${side}`,
-            src: `${imgBase}${file}.png`,
-            z: slotDef.z,
-            filter,
-            animation: BREATH,
-          });
-        }
-
-        if (item.hasAcc && item.accImage !== 0) {
-          const accFile = handAccessoryFile(ctx, item, side);
-          if (accFile) {
-            layers.push({
-              id: `cloth-${slotDef.cn}-${side}-acc`,
-              src: `${imgBase}${accFile}.png`,
-              z: slotDef.z + 0.2,
-              filter: clothFilter(worn.第二色调),
-              animation: BREATH,
-            });
-          }
-        }
-      }
-      continue;
-    }
-
-    // Main clothing layer
-    if (item.mainImage !== 0) {
-      layers.push({
-        id: `cloth-${slotDef.cn}`,
-        src: `${imgBase}${mainFile}.png`,
-        z: slotDef.z,
-        filter,
-        animation: BREATH,
-      });
-    }
-
-    // For upper/under-upper: add breast-fitting numeric layer if available
-    if ((slotDef.cn === "上装" || slotDef.cn === "内衣上装") && item.numeric.length > 0) {
-      // Map breast size to nearest available numeric layer
-      const targets = item.numeric
-        .map(Number)
-        .filter((n) => !isNaN(n))
-        .sort((a, b) => a - b);
-      if (targets.length > 0) {
-        const clamp = Math.min(breastSize, Math.max(...targets));
-        const numeric = targets.reduce((prev, cur) =>
-          Math.abs(cur - clamp) < Math.abs(prev - clamp) ? cur : prev,
-        );
-        layers.push({
-          id: `cloth-${slotDef.cn}-fit`,
-          src: `${imgBase}${numeric}.png`,
-          z: slotDef.z + 0.1,
-          filter,
-          animation: BREATH,
-        });
-      }
-    }
-
-    // Accessory layer
-    if (item.hasAcc && item.accImage !== 0) {
-      const accFilter = clothFilter(worn.第二色调);
-      layers.push({
-        id: `cloth-${slotDef.cn}-acc`,
-        src: `${imgBase}${accessoryFile(ctx, worn, item)}.png`,
-        z: slotDef.z + 0.2,
-        filter: accFilter,
-        animation: BREATH,
-      });
-    }
-  }
+  applyBackLayers(ctx, layers);
+  applyMainLayers(ctx, layers);
+  applySleeveLayers(ctx, layers);
+  applyBreastLayers(ctx, layers);
+  applyAccessoryLayers(ctx, layers);
+  applyBellyLayers(ctx, layers);
+  applyGenitalLayers(ctx, layers);
 
   return layers;
+}
+
+export function buildClothingLayers(state: ResolvedState): LayerSpec[] {
+  if (!state.payload.衣物) return [];
+
+  const layers: LayerSpec[] = [];
+  for (const slotDef of SLOTS) {
+    const resolved = state.clothing[slotDef.cn];
+    if (!resolved) continue;
+    layers.push(...buildResolvedClothingLayers(state, resolved));
+  }
+  return layers;
+}
+
+export function getClothingBranchHints(
+  slotCn: string,
+  name: string,
+): Record<string, boolean> | undefined {
+  const slot = SLOTS.find((candidate) => candidate.cn === slotCn);
+  const item = slot?.data.find((candidate) => candidate.cnName === name || candidate.name === name);
+  return item?.branchHints;
 }

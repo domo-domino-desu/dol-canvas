@@ -1,37 +1,19 @@
-import type { LayerSpec, BuildContext, ColorFilter } from "@/types";
+import type { LayerSpec } from "@/types";
+import type { ResolvedState } from "@/character/state";
 import { Z } from "@/data/zindex";
-import { faceData, colorsData } from "@/data/generated";
+import { faceData } from "@/data/generated";
+import { materialFilter } from "@/character/material";
 
-type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
-
-const eyeColors: ColorEntry[] = (colorsData as typeof colorsData).eyes as ColorEntry[];
-const hairColors: ColorEntry[] = (colorsData as typeof colorsData).hair as ColorEntry[];
 const demeanorEn: Record<string, string> = (faceData as typeof faceData).demeanorEn;
 const browsMap: Record<string, string> = (faceData as typeof faceData).browsMap;
 const mouthMap: Record<string, string> = (faceData as typeof faceData).mouthMap;
 
-function eyeFilter(cnName?: string): ColorFilter | undefined {
-  if (!cnName) return undefined;
-  const entry =
-    eyeColors.find((e) => e.cnName === cnName) ??
-    eyeColors.find((e) => e.variable === cnName) ??
-    eyeColors.find((e) => e.name === cnName);
-  if (!entry) return undefined;
-  return { desaturate: true, ...entry.filter, blendMode: entry.filter.blendMode ?? "hard-light" };
+function primaryHairColor(payload: ResolvedState["payload"]): string | undefined {
+  return payload.发色详情?.头发?.发色 ?? payload.发色;
 }
 
-function hairFilter(cnName?: string): ColorFilter | undefined {
-  if (!cnName) return undefined;
-  const entry =
-    hairColors.find((e) => e.cnName === cnName) ??
-    hairColors.find((e) => e.variable === cnName) ??
-    hairColors.find((e) => e.name === cnName);
-  if (!entry) return undefined;
-  return { desaturate: true, ...entry.filter, blendMode: entry.filter.blendMode ?? "hard-light" };
-}
-
-export function buildFaceLayers(ctx: BuildContext): LayerSpec[] {
-  const { payload, baseUrl } = ctx;
+export function buildFaceLayers(state: ResolvedState): LayerSpec[] {
+  const { payload, baseUrl } = state;
   const p = payload;
   const layers: LayerSpec[] = [];
   const b = baseUrl;
@@ -47,8 +29,8 @@ export function buildFaceLayers(ctx: BuildContext): LayerSpec[] {
   const halfClosed = eyes.半睁眼 ?? false;
   const bloodshot = eyes.血丝眼 ?? false;
   const tears = eyes.流泪程度 ?? p.泪水 ?? 0;
-  const irisFilterLeft = emptyEyes ? undefined : eyeFilter(leftEyeColor);
-  const irisFilterRight = emptyEyes ? undefined : eyeFilter(rightEyeColor);
+  const irisFilterLeft = emptyEyes ? undefined : materialFilter("eyes", leftEyeColor);
+  const irisFilterRight = emptyEyes ? undefined : materialFilter("eyes", rightEyeColor);
   const eyeSuffix = halfClosed ? "-half-closed" : "";
   const irisBase = emptyEyes ? "iris-empty" : "iris";
   const blinkAnimation = halfClosed ? undefined : "blink";
@@ -100,7 +82,7 @@ export function buildFaceLayers(ctx: BuildContext): LayerSpec[] {
     id: "brow",
     src: `${demDir}brow-${browKey}.png`,
     z: Z.BROW,
-    filter: hairFilter(p.发色),
+    filter: materialFilter("hair", primaryHairColor(p)),
   });
 
   // ── Mouth ─────────────────────────────────────────────────────────────────

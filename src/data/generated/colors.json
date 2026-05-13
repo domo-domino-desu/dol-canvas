@@ -298,7 +298,8 @@
       "name": "light blue",
       "cnName": "浅蓝色",
       "filter": {
-        "blend": "#00D9F7"
+        "blend": "#00D9F7",
+        "brightness": 0.2
       }
     },
     {
@@ -330,7 +331,8 @@
       "name": "lime green",
       "cnName": "柠檬绿",
       "filter": {
-        "blend": "#3ae137"
+        "blend": "#3ae137",
+        "brightness": 0.2
       }
     },
     {
@@ -354,7 +356,8 @@
       "name": "pink",
       "cnName": "粉色",
       "filter": {
-        "blend": "#F76EF7"
+        "blend": "#F76EF7",
+        "brightness": 0.2
       }
     },
     {
@@ -370,7 +373,8 @@
       "name": "light grey",
       "cnName": "浅灰色",
       "filter": {
-        "blend": "#d1d1d1"
+        "blend": "#d1d1d1",
+        "brightness": 0.2
       }
     },
     {
@@ -378,7 +382,8 @@
       "name": "colorWheelTemporary0",
       "cnName": "灰白色",
       "filter": {
-        "blend": "#d1d1d1"
+        "blend": "#d1d1d1",
+        "brightness": 0.2
       }
     },
     {
@@ -386,7 +391,8 @@
       "name": "colorWheelTemporary1",
       "cnName": "灰白色",
       "filter": {
-        "blend": "#d1d1d1"
+        "blend": "#d1d1d1",
+        "brightness": 0.2
       }
     },
     {
@@ -394,7 +400,8 @@
       "name": "red possessed",
       "cnName": "鲜红色",
       "filter": {
-        "blend": "#f40101"
+        "blend": "#f40101",
+        "brightness": 0.2
       }
     },
     {
@@ -402,7 +409,8 @@
       "name": "blue possessed",
       "cnName": "布蓝色",
       "filter": {
-        "blend": "#0F52BA"
+        "blend": "#0F52BA",
+        "brightness": 0.4
       }
     }
   ],
@@ -856,91 +864,180 @@
   "skin": {
     "light": {
       "gradient": ["#ffffff", "#ffd2ac"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "medium": {
       "gradient": ["#ffd2ac", "#8a614d"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "dark": {
       "gradient": ["#8a614d", "#39241a"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "gyaru": {
       "gradient": ["#ffffff", "#ffd2ac", "#8a614d", "#39241a"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ylight": {
       "gradient": ["#f0ffe6", "#f0e4bc"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ymedium": {
       "gradient": ["#f0e4bc", "#8e7f68"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ydark": {
       "gradient": ["#8e7f68", "#483f35"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ygyaru": {
       "gradient": ["#f0ffe6", "#f0e4bc", "#8e7f68", "#483f35"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "glight": {
       "gradient": ["#fdf4d7", "#ffc482"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "gmedium": {
       "gradient": ["#ffc482", "#9a6b36"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "gdark": {
       "gradient": ["#9a6b36", "#513400"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ggyaru": {
       "gradient": ["#fdf4d7", "#ffc482", "#9a6b36", "#513400"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "rlight": {
       "gradient": ["#f7e4e0", "#ebae8a"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "rmedium": {
       "gradient": ["#ebae8a", "#8d5244"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "rdark": {
       "gradient": ["#8d5244", "#482616"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "rgyaru": {
       "gradient": ["#f7e4e0", "#ebae8a", "#8d5244", "#482616"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "blight": {
       "gradient": ["#ecf1f9", "#dcc6c6"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "bmedium": {
       "gradient": ["#dcc6c6", "#917376"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "brightness": 0.1,
+      "desaturate": false
     },
     "bdark": {
       "gradient": ["#917376", "#402f31"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "bgyaru": {
       "gradient": ["#ecf1f9", "#dcc6c6", "#917376", "#402f31"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": false
     },
     "ghost": {
       "gradient": ["#ffffff", "#ffffff"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "alpha": 0.6,
+      "desaturate": true
     },
     "wraith": {
       "gradient": ["#ffffff", "#ffffff"],
-      "blendMode": "multiply"
+      "blendMode": "multiply",
+      "desaturate": true
+    }
+  },
+  "hairGradients": {
+    "fringe": {
+      "high-ombre": {
+        "gradient": "linear",
+        "values": [300, 200, 300, 0],
+        "stops": [0.6, 0.85]
+      },
+      "low-ombre": {
+        "gradient": "linear",
+        "values": [300, 200, 300, 0],
+        "stops": [0.6, 0.85],
+        "lengthOffset": "minus-half"
+      },
+      "split": {
+        "parted": {
+          "gradient": "linear",
+          "values": [21, 255, 234, 0],
+          "stops": [0.63, 0.65]
+        },
+        "mohawk": {
+          "gradient": "radial",
+          "values": [93, 60, 0, 93, 100, 202],
+          "stops": [0.155, 0.16]
+        },
+        "overgrown": {
+          "gradient": "radial",
+          "values": [93, 60, 0, 93, 60, 200],
+          "stops": [0.155, 0.16]
+        },
+        "all": {
+          "gradient": "radial",
+          "values": [-40, 100, 0, -40, 100, 1070],
+          "stops": [0.155, 0.16]
+        }
+      },
+      "face-frame": {
+        "gradient": "radial",
+        "values": [125, 103, 0, 125, 103, 350],
+        "stops": [0.15, 0.175]
+      }
+    },
+    "sides": {
+      "high-ombre": {
+        "gradient": "linear",
+        "values": [300, 200, 300, 0],
+        "stops": [0.6, 0.85]
+      },
+      "low-ombre": {
+        "gradient": "linear",
+        "values": [300, 200, 300, 0],
+        "stops": [0.6, 0.85],
+        "lengthOffset": "minus-half"
+      },
+      "split": {
+        "gradient": "linear",
+        "values": [0, 100, 600, 100],
+        "stops": [0.19, 0.21]
+      },
+      "face-frame": {
+        "gradient": "linear",
+        "values": [0, 100, 600, 100],
+        "stops": [0, 0]
+      }
     }
   }
 }

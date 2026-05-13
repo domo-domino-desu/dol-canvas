@@ -2,16 +2,16 @@
   "demeanor": ["aloof", "catty", "default", "foxy", "gloomy", "sweet"],
   "demeanorCn": {
     "default": "温柔",
-    "aloof": "高冷",
     "catty": "妩媚",
+    "aloof": "高冷",
     "sweet": "甜美",
     "foxy": "勾人",
     "gloomy": "忧郁"
   },
   "demeanorEn": {
     "温柔": "default",
-    "高冷": "aloof",
     "妩媚": "catty",
+    "高冷": "aloof",
     "甜美": "sweet",
     "勾人": "foxy",
     "忧郁": "gloomy"

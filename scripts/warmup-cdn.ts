@@ -14,8 +14,8 @@ import { fileURLToPath } from "url";
 
 const ROOT = join(fileURLToPath(import.meta.url), "../..");
 const IMG_DIR = join(ROOT, "img");
-const DEFAULT_BASE_URL = "https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@main/img/";
-const DEFAULT_CONCURRENCY = 100;
+const DEFAULT_BASE_URL = "https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@v0.1.7/img/";
+const DEFAULT_CONCURRENCY = 3000;
 
 interface Options {
   baseUrl: string;

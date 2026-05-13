@@ -1,0 +1,38 @@
+[
+  {
+    "name": "face: makeup and cosmetic extras not exposed by payload",
+    "paths": [
+      "img/face/default/blusher.png",
+      "img/face/default/freckles.png",
+      "img/face/default/ears.png"
+    ],
+    "prefixes": ["img/face/default/lipstick-"],
+    "regexes": ["^img/face/default/[^/]+/makeup/"]
+  },
+  {
+    "name": "body: parasite/mannequin/chastity variants not exposed by payload",
+    "paths": ["img/body/breasts/breasts-0.png"],
+    "prefixes": ["img/body/ear-slime", "img/body/scars-"],
+    "regexes": [
+      "^img/body/(parasites|mannequin)/",
+      "^img/body/breasts/(clothed|mask|slime|ear-slime|urchin)",
+      "^img/body/penis(-no-balls)?/ear-slime",
+      "^img/body/penis(-no-balls)?/(.*virgin|chastity)"
+    ]
+  },
+  {
+    "name": "clothes: pregnancy/formfitting mask helper variants not implemented yet",
+    "prefixes": ["img/clothes/masks/"],
+    "regexes": ["/(?:preg|belly|shadow)-"]
+  },
+  {
+    "name": "clothes: combat/special branches not exposed by payload",
+    "regexes": ["^img/clothes/.*/(?:baton|unarmed|whip|pulled|Shoes|full-body)\\.png$"]
+  },
+  {
+    "name": "transformations: combat/cover/flaunt/hirsute branches not implemented in idle renderer",
+    "regexes": [
+      "^img/transformations/[^/]+/(wings-cover|wings-flaunt|tail-cover|tail-flaunt|hirsute)/"
+    ]
+  }
+]

@@ -1,41 +1,6 @@
-/**
- * gen-transformations.ts
- * 扫描 img/transformations/ 目录，提取各转化类型及其部位变体，
- * 并从 clothes-testing.twee 的 i18n 条目中补全展示标签。
- */
-
-import { join } from "path";
-import {
-  ensureOutDir,
-  writeJson,
-  listDirs,
-  listPngStems,
-  IMG_DIR,
-  loadI18n,
-  type I18nItem,
-} from "./utils";
-
-const TRANSFORM_CN: Record<string, string> = {
-  angel: "天使",
-  fallen: "堕天使",
-  demon: "恶魔",
-  cat: "猫",
-  fox: "狐",
-  wolf: "狼",
-  cow: "牛",
-  bird: "鸟",
-};
-
-const TYPE_TITLE: Record<string, string> = {
-  angel: "Angel",
-  fallen: "Fallen Angel",
-  demon: "Demon",
-  cat: "Cat",
-  fox: "Fox",
-  wolf: "Wolf",
-  cow: "Cow",
-  bird: "Bird",
-};
+import { join } from "node:path";
+import type { BuildContext, I18nItem } from "../types";
+import { listDirs, listPngStems } from "../utils/fs";
 
 interface TransformLabels {
   typeLabels: Record<string, string>;
@@ -72,9 +37,8 @@ function parseOption(item: I18nItem): { value: string; label: string } | undefin
   return { value: normKey(en[1]!), label: cn[1]! };
 }
 
-function parseTransformLabels(): TransformLabels {
-  const i18n = loadI18n();
-  const items = [...i18n.typeB.TypeBOutputText, ...i18n.typeB.TypeBInputStoryScript]
+function parseTransformLabels(ctx: BuildContext): TransformLabels {
+  const items = [...ctx.i18nRaw.typeB.TypeBOutputText, ...ctx.i18nRaw.typeB.TypeBInputStoryScript]
     .filter(
       (item) =>
         item.fileName === "clothes-testing.twee" && item.pN === "clothesTestingImageGenerate",
@@ -84,8 +48,8 @@ function parseTransformLabels(): TransformLabels {
   const typeLabels: Record<string, string> = {};
   const partLabels: Record<string, string> = {};
   const variantLabels: Record<string, string> = {};
-
   let inTransforms = false;
+
   for (const item of items) {
     if (item.f?.includes("<h4>Transformations</h4>")) {
       inTransforms = true;
@@ -124,52 +88,73 @@ function labelForVariant(variant: string, labels: TransformLabels): string {
     .split("-")
     .filter((part) => !["back", "front", "left", "right"].includes(part))
     .join("-");
-
   const direct = labels.variantLabels[normKey(base)];
   if (direct) return direct;
 
   const compact = labels.variantLabels[normKey(base.replace(/-/g, ""))];
   if (compact) return compact;
 
-  const pieces = base.split("-").map((part) => labels.variantLabels[normKey(part)] ?? part);
-  return pieces.join("");
+  return base
+    .split("-")
+    .map((part) => labels.variantLabels[normKey(part)] ?? part)
+    .join("");
 }
 
-const labels = parseTransformLabels();
-const transformDir = join(IMG_DIR, "transformations");
-const types = listDirs(transformDir);
+function transformCnByEn(ctx: BuildContext): Record<string, string> {
+  const result = Object.fromEntries(
+    Object.entries(ctx.mappings.transformTypes).map(([cn, entry]) => [entry.en, cn]),
+  );
+  for (const cn of ctx.whitelist["转化"] ?? []) {
+    const en = ctx.mappings.transformTypes[cn]?.en;
+    if (en) result[en] = cn;
+  }
+  return result;
+}
 
-const output: Record<string, TransformData> = {};
-for (const type of types) {
-  const typeDir = join(transformDir, type);
-  const parts: Record<string, string[]> = {};
-  const partLabels: Record<string, string> = {};
-  const variantLabels: Record<string, Record<string, string>> = {};
+function typeTitle(type: string): string {
+  const titles: Record<string, string> = {
+    angel: "Angel",
+    fallen: "Fallen Angel",
+    demon: "Demon",
+    cat: "Cat",
+    fox: "Fox",
+    wolf: "Wolf",
+    cow: "Cow",
+    bird: "Bird",
+  };
+  return titles[type] ?? type;
+}
 
-  for (const part of listDirs(typeDir)) {
-    const variants = listPngStems(join(typeDir, part));
-    parts[part] = variants;
-    partLabels[part] = labelForPart(part, labels);
-    variantLabels[part] = Object.fromEntries(
-      variants.map((variant) => [variant, labelForVariant(variant, labels)]),
-    );
+export function generateTransformations(ctx: BuildContext): Record<string, TransformData> {
+  const labels = parseTransformLabels(ctx);
+  const cnByEn = transformCnByEn(ctx);
+  const transformDir = join(ctx.imgDir, "transformations");
+  const output: Record<string, TransformData> = {};
+
+  for (const type of listDirs(transformDir)) {
+    const typeDir = join(transformDir, type);
+    const parts: Record<string, string[]> = {};
+    const partLabels: Record<string, string> = {};
+    const variantLabels: Record<string, Record<string, string>> = {};
+
+    for (const part of listDirs(typeDir)) {
+      const variants = listPngStems(join(typeDir, part));
+      parts[part] = variants;
+      partLabels[part] = labelForPart(part, labels);
+      variantLabels[part] = Object.fromEntries(
+        variants.map((variant) => [variant, labelForVariant(variant, labels)]),
+      );
+    }
+
+    output[type] = {
+      cnName: cnByEn[type] ?? type,
+      label: labels.typeLabels[normKey(typeTitle(type))] ?? cnByEn[type] ?? type,
+      parts,
+      partLabels,
+      variantLabels,
+    };
   }
 
-  output[type] = {
-    cnName: TRANSFORM_CN[type] ?? type,
-    label: labels.typeLabels[normKey(TYPE_TITLE[type] ?? type)] ?? TRANSFORM_CN[type] ?? type,
-    parts,
-    partLabels,
-    variantLabels,
-  };
+  console.log(`  transformations: ${Object.keys(output).length} types`);
+  return output;
 }
-
-ensureOutDir();
-writeJson("transformations", output);
-console.log(`gen-transformations: ${types.length} types`);
-for (const [type, data] of Object.entries(output)) {
-  console.log(
-    `  ${type} (${data.cnName}/${data.label}): parts=[${Object.keys(data.parts).join(", ")}]`,
-  );
-}
-console.log("gen-transformations: done");

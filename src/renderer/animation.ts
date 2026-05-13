@@ -1,5 +1,7 @@
 import type { LayerSpec } from "@/types";
-import { renderLayers, type RenderError } from "@/renderer/canvas";
+import { compileLayers } from "@/renderer/compiler";
+import { drawCompiledLayers } from "@/renderer/canvas";
+import type { CompiledLayer, RenderError } from "@/renderer/types";
 
 // ── Keyframe sequences (from DoL canvasmodel-animations.js) ─────────────────
 
@@ -63,41 +65,48 @@ interface AnimationState {
 
 export class AnimationController {
   private canvas: HTMLCanvasElement;
-  private layers: LayerSpec[];
+  private sourceLayers: LayerSpec[];
+  private compiledLayers: CompiledLayer[] = [];
   private onError?: (e: RenderError) => void;
 
   private rafId: number | null = null;
   private states = new Map<string, AnimationState>();
+  private compileVersion = 0;
 
   constructor(canvas: HTMLCanvasElement, layers: LayerSpec[], onError?: (e: RenderError) => void) {
     this.canvas = canvas;
-    this.layers = layers;
+    this.sourceLayers = layers;
     this.onError = onError;
   }
 
   /** Replace the layer list (e.g., after payload change) without stopping. */
-  updateLayers(layers: LayerSpec[]): void {
-    this.layers = layers;
+  async updateLayers(layers: LayerSpec[]): Promise<boolean> {
+    this.sourceLayers = layers;
+    const version = ++this.compileVersion;
+    const compiled = await compileLayers(this.canvas, layers, this.onError);
+    if (version !== this.compileVersion) return false;
+
+    this.compiledLayers = compiled.layers;
     this.ensureAnimationStates();
-    this.applyAnimationFrames();
-    renderLayers(this.canvas, this.layers, this.onError);
+    this.draw();
+    return true;
   }
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.rafId !== null) return;
     this.states.clear();
-    this.ensureAnimationStates();
-    this.applyAnimationFrames();
-    renderLayers(this.canvas, this.layers, this.onError);
+    const applied = await this.updateLayers(this.sourceLayers);
+    if (!applied) return;
     this.tick();
   }
 
   stop(): void {
+    this.compileVersion++;
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
-    this.restoreFrameZero();
+    this.states.clear();
   }
 
   private tick = (): void => {
@@ -133,14 +142,19 @@ export class AnimationController {
       }
     }
 
-    if (changed) {
-      this.applyAnimationFrames();
-      renderLayers(this.canvas, this.layers, this.onError);
-    }
+    if (changed) this.draw();
   };
 
+  private draw(): void {
+    drawCompiledLayers(this.canvas, this.compiledLayers, (layer) =>
+      layer.animation ? (this.states.get(layer.animation)?.frame ?? layer.frame) : layer.frame,
+    );
+  }
+
   private ensureAnimationStates(now = performance.now()): void {
-    const active = new Set(this.layers.map((l) => l.animation).filter((a): a is string => !!a));
+    const active = new Set(
+      this.compiledLayers.map((l) => l.animation).filter((a): a is string => !!a),
+    );
 
     for (const name of active) {
       if (this.states.has(name)) continue;
@@ -155,19 +169,6 @@ export class AnimationController {
 
     for (const name of this.states.keys()) {
       if (!active.has(name)) this.states.delete(name);
-    }
-  }
-
-  private applyAnimationFrames(): void {
-    for (const layer of this.layers) {
-      if (!layer.animation) continue;
-      layer.frame = this.states.get(layer.animation)?.frame ?? 0;
-    }
-  }
-
-  private restoreFrameZero(): void {
-    for (const layer of this.layers) {
-      if (layer.animation) layer.frame = 0;
     }
   }
 }

@@ -69,10 +69,8 @@ export class DolCanvas {
     this.stopAnimation();
 
     const layers = buildLayers(payload, this._baseUrl);
-    await renderLayers(this._canvas, layers, onError);
-
     this._anim = new AnimationController(this._canvas, layers, onError);
-    this._anim.start();
+    await this._anim.start();
   }
 
   /**
@@ -87,8 +85,7 @@ export class DolCanvas {
       return this.render(payload, onError);
     }
     const layers = buildLayers(payload, this._baseUrl);
-    await renderLayers(this._canvas, layers, onError);
-    this._anim.updateLayers(layers);
+    await this._anim.updateLayers(layers);
   }
 
   /** Stop the animation loop (restores eyes-open state). */

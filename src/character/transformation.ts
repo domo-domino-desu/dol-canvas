@@ -1,16 +1,17 @@
-import type { LayerSpec, BuildContext, ColorFilter } from "@/types";
+import type { LayerSpec, ColorFilter } from "@/types";
+import type { ResolvedState } from "@/character/state";
 import { Z } from "@/data/zindex";
-import { transformationsData, colorsData } from "@/data/generated";
+import { transformationsData } from "@/data/generated";
+import { transformationFilterRules } from "@/character/render-catalog";
+import { materialFilter } from "@/character/material";
 
 type TransformEntry = {
   cnName: string;
   parts: Record<string, string[]>;
   variantLabels?: Record<string, Record<string, string>>;
 };
-type ColorEntry = { variable: string; name: string; cnName: string; filter: ColorFilter };
 
 const transforms = transformationsData as Record<string, TransformEntry>;
-const hairColors: ColorEntry[] = (colorsData as typeof colorsData).hair as ColorEntry[];
 const BREATH = "playerBreath";
 
 // Which parts to show in idle/display state, and their z-indices
@@ -26,42 +27,23 @@ const IDLE_PARTS: Record<string, { z: number }> = {
   cheeks: { z: Z.LOWER },
 };
 
-const DEMON_FILTER: ColorFilter = {
-  blend: "hsl(275, 100%, 30%)",
-  blendMode: "hard-light",
-  brightness: 0,
-  desaturate: false,
-};
-
 function stripDirectionalSuffix(variant: string): string {
   return variant.replace(/-(back|front|left|right)$/, "");
 }
 
-function hairFilter(cnName?: string): ColorFilter | undefined {
-  if (!cnName) return undefined;
-  const entry = hairColors.find(
-    (e) => e.cnName === cnName || e.variable === cnName || e.name === cnName,
-  );
-  if (!entry) return undefined;
-  return { desaturate: true, ...entry.filter, blendMode: entry.filter.blendMode ?? "hard-light" };
+function primaryHairColor(payload: ResolvedState["payload"]): string | undefined {
+  return payload.发色详情?.头发?.发色 ?? payload.发色;
 }
 
 function filterForPart(
   transformType: string,
   partKey: string,
-  payload: BuildContext["payload"],
+  payload: ResolvedState["payload"],
 ): ColorFilter | undefined {
-  if (transformType === "demon" && ["wings-idle", "tail-idle", "horns"].includes(partKey)) {
-    return DEMON_FILTER;
-  }
-
-  if (
-    (["cat", "wolf"].includes(transformType) &&
-      ["ears", "tail-idle", "cheeks"].includes(partKey)) ||
-    (transformType === "fox" && ["ears", "tail-idle", "cheeks"].includes(partKey)) ||
-    (transformType === "bird" && ["wings-idle", "tail-idle", "feathers"].includes(partKey))
-  ) {
-    return hairFilter(payload.发色);
+  const rule = transformationFilterRules[transformType];
+  if (rule?.fixed?.parts.includes(partKey)) return rule.fixed.filter;
+  if (rule?.inheritHair?.includes(partKey)) {
+    return materialFilter("hair", primaryHairColor(payload));
   }
 
   return undefined;
@@ -96,10 +78,10 @@ function resolveVariant(
   const hint = partHint[dirKey];
 
   if (hint) {
-    const match = normalized.find(
-      ({ variant, base, label }) =>
-        variant === hint || base === hint || variant.startsWith(hint) || label === hint,
-    );
+    const match =
+      normalized.find(
+        ({ variant, base, label }) => variant === hint || base === hint || label === hint,
+      ) ?? normalized.find(({ variant }) => variant.startsWith(hint));
     if (match) return match.base;
   }
 
@@ -115,8 +97,8 @@ function findTransform(name?: string): [string, TransformEntry] | undefined {
   return entry;
 }
 
-export function buildTransformLayers(ctx: BuildContext): LayerSpec[] {
-  const { payload, baseUrl } = ctx;
+export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
+  const { payload, baseUrl } = state;
   if (!payload.转化) return [];
 
   const transformType = typeof payload.转化 === "object" ? payload.转化.类型 : payload.转化;

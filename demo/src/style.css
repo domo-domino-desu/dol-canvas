@@ -124,6 +124,10 @@ input[readonly] {
   padding-top: 12px;
 }
 
+.compact {
+  gap: 10px;
+}
+
 .grid-2,
 .grid-3,
 .actions,
@@ -132,9 +136,12 @@ input[readonly] {
   gap: 12px;
 }
 
-.actions,
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .grid-3 {
@@ -154,6 +161,12 @@ input[readonly] {
   background: #ffffff;
   border: 1px solid #d8d4ca;
   border-radius: 8px;
+}
+
+.branch-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
 }
 
 summary {

@@ -1,6 +1,6 @@
 {
   "name": "dol-canvas",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Degrees of Lewdity style canvas character renderer with a Chinese payload API.",
   "workspaces": [
     "demo"
@@ -29,15 +29,10 @@
     "prepare": "husky",
     "copy-img": "bun scripts/copy-img.ts",
     "warmup:cdn": "bun scripts/warmup-cdn.ts",
-    "gen": "bun scripts/gen-all.ts",
-    "gen:i18n": "bun scripts/gen-i18n.ts",
-    "gen:clothes": "bun scripts/gen-clothes.ts",
-    "gen:colors": "bun scripts/gen-colors.ts",
-    "gen:hair": "bun scripts/gen-hair.ts",
-    "gen:transformations": "bun scripts/gen-transformations.ts",
-    "gen:face": "bun scripts/gen-face.ts",
-    "gen:whitelist:check": "bun scripts/gen-whitelist.ts",
-    "gen:whitelist:reset": "bun scripts/gen-whitelist.ts --reset",
+    "gen": "bun scripts/gen-data/build.ts",
+    "gen:whitelist:check": "bun scripts/gen-data/build.ts --check-whitelist",
+    "gen:whitelist:reset": "bun scripts/gen-data/build.ts --reset-whitelist",
+    "check:render": "bun scripts/check-render-coverage.ts",
     "dev": "vite --config demo/vite.config.ts --host 0.0.0.0",
     "demo": "bun --filter @dol-canvas/demo dev",
     "demo:local": "bun --filter @dol-canvas/demo dev:local",
