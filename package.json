@@ -15,12 +15,14 @@
   "module": "dist/dol-canvas.esm.js",
   "exports": {
     ".": {
+      "types": "./src/index.ts",
       "import": "./dist/dol-canvas.esm.js",
       "require": "./dist/dol-canvas.umd.js"
     },
     "./vue": {
       "types": "./src/vue/index.ts",
-      "import": "./src/vue/index.ts"
+      "import": "./dist/dol-canvas-vue.esm.js",
+      "require": "./dist/dol-canvas-vue.umd.js"
     }
   },
   "scripts": {
@@ -40,7 +42,7 @@
     "demo": "bun --filter @dol-canvas/demo dev",
     "demo:local": "bun --filter @dol-canvas/demo dev:local",
     "demo:cdn": "bun --filter @dol-canvas/demo dev:cdn",
-    "build": "vite build --config vite.lib.config.ts",
+    "build": "vite build --config vite.lib.config.ts && vite build --config vite.vue.config.ts",
     "typecheck": "tsc --noEmit --allowJs false",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
