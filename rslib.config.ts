@@ -63,7 +63,10 @@ export default defineConfig({
         },
       },
       output: {
-        externals: ["vue"],
+        externals: {
+          vue: "vue",
+          "@/index": "dol-canvas",
+        },
       },
       dts: {
         ...dts,
@@ -82,6 +85,12 @@ export default defineConfig({
       output: {
         externals: {
           vue: "Vue",
+          "@/index": {
+            commonjs: "dol-canvas",
+            commonjs2: "dol-canvas",
+            amd: "dol-canvas",
+            root: "DolCanvas",
+          },
         },
       },
       dts: false,
