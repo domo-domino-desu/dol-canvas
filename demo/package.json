@@ -3,20 +3,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "dev:local": "vite --host 0.0.0.0",
-    "dev:cdn": "DOL_CANVAS_SOURCE=cdn vite --host 0.0.0.0",
-    "build": "vite build",
-    "build:local": "vite build",
-    "build:cdn": "DOL_CANVAS_SOURCE=cdn vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "dev": "rsbuild dev --config rsbuild.config.ts",
+    "dev:local": "rsbuild dev --config rsbuild.config.ts",
+    "dev:cdn": "DOL_CANVAS_SOURCE=cdn rsbuild dev --config rsbuild.config.ts",
+    "build": "rsbuild build --config rsbuild.config.ts",
+    "build:local": "rsbuild build --config rsbuild.config.ts",
+    "build:cdn": "DOL_CANVAS_SOURCE=cdn rsbuild build --config rsbuild.config.ts",
+    "preview": "rsbuild preview --config rsbuild.config.ts"
   },
   "dependencies": {
     "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.0",
-    "typescript": "^5.9.0",
-    "vite": "^7.0.0"
+    "@rsbuild/core": "^2.0.6",
+    "@rsbuild/plugin-vue": "^1.2.8",
+    "typescript": "^5.9.0"
   }
 }

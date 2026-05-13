@@ -1,6 +1,6 @@
 {
   "name": "dol-canvas",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Degrees of Lewdity style canvas character renderer with a Chinese payload API.",
   "workspaces": [
     "demo"
@@ -13,14 +13,15 @@
   "type": "module",
   "main": "dist/dol-canvas.umd.js",
   "module": "dist/dol-canvas.esm.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/dol-canvas.esm.js",
       "require": "./dist/dol-canvas.umd.js"
     },
     "./vue": {
-      "types": "./src/vue/index.ts",
+      "types": "./dist/vue/index.d.ts",
       "import": "./dist/dol-canvas-vue.esm.js",
       "require": "./dist/dol-canvas-vue.umd.js"
     }
@@ -33,11 +34,11 @@
     "gen:whitelist:check": "bun scripts/gen-data/build.ts --check-whitelist",
     "gen:whitelist:reset": "bun scripts/gen-data/build.ts --reset-whitelist",
     "check:render": "bun scripts/check-render-coverage.ts",
-    "dev": "vite --config demo/vite.config.ts --host 0.0.0.0",
+    "dev": "rsbuild dev --config demo/rsbuild.config.ts",
     "demo": "bun --filter @dol-canvas/demo dev",
     "demo:local": "bun --filter @dol-canvas/demo dev:local",
     "demo:cdn": "bun --filter @dol-canvas/demo dev:cdn",
-    "build": "vite build --config vite.lib.config.ts && vite build --config vite.vue.config.ts",
+    "build": "rslib build",
     "release": "bun scripts/release.ts",
     "typecheck": "tsc --noEmit --allowJs false",
     "lint": "oxlint .",
@@ -48,11 +49,12 @@
     "check": "bun run lint && bun run typecheck"
   },
   "dependencies": {
-    "@vitejs/plugin-vue": "^6.0.0",
-    "vite": "^7.0.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@rsbuild/core": "^2.0.6",
+    "@rsbuild/plugin-vue": "^1.2.8",
+    "@rslib/core": "^0.21.5",
     "@types/bun": "latest",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",

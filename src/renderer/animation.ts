@@ -109,8 +109,8 @@ export class AnimationController {
     this.states.clear();
   }
 
-  private tick = (): void => {
-    this.rafId = requestAnimationFrame(this.tick);
+  private tick(): void {
+    this.rafId = requestAnimationFrame(() => this.tick());
 
     const now = performance.now();
     let changed = false;
@@ -143,7 +143,7 @@ export class AnimationController {
     }
 
     if (changed) this.draw();
-  };
+  }
 
   private draw(): void {
     drawCompiledLayers(this.canvas, this.compiledLayers, (layer) =>
