@@ -82,11 +82,19 @@ export interface ClothingWorn {
 export type ClothingSlotPayload = ClothingWorn | null | undefined;
 export interface TransformDetail {
     翅膀?: string;
+    翅膀状态?: "idle" | "cover" | "flaunt";
+    左翅膀状态?: "idle" | "cover";
+    右翅膀状态?: "idle" | "cover";
+    翅膀层级?: "前" | "后";
     光环?: string;
     耳朵?: string;
     尾巴?: string;
+    尾巴状态?: "idle" | "cover" | "flaunt";
+    尾巴层级?: "前" | "后";
     角?: string;
-    羽毛?: string;
+    颊羽?: string;
+    覆羽?: string;
+    阴毛?: string;
     眼睛?: string;
     脸颊?: string;
 }
@@ -113,10 +121,12 @@ export interface CharacterPayload {
     阴茎?: boolean;
     阴茎状态?: "soft" | "hard";
     阴茎大小?: number;
+    包茎?: boolean;
     睾丸?: boolean;
     避孕套?: CondomPayload;
     精液?: CumPayload;
     孕肚?: number;
+    覆盖孕肚?: boolean;
     左臂?: ArmState;
     右臂?: RightArmState;
     发型?: string | HairPayload;

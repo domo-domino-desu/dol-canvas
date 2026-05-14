@@ -45,16 +45,19 @@ export function generateColors(ctx: BuildContext) {
   const hair = normalizeColors(ctx.dol.colors.hair, cnMap);
   const eyes = normalizeColors(ctx.dol.colors.eyes, cnMap);
   const clothes = normalizeColors(ctx.dol.colors.clothes, cnMap);
+  const condom = normalizeColors(ctx.dol.colors.condom, cnMap);
 
   console.log(`  hair colors: ${hair.length}`);
   console.log(`  eye colors: ${eyes.length}`);
   console.log(`  cloth colors: ${clothes.length}`);
+  console.log(`  condom colors: ${condom.length}`);
   console.log(`  skin types: ${Object.keys(ctx.dol.colors.skin).length}`);
 
   return {
     hair,
     eyes,
     clothes,
+    condom,
     skin: ctx.dol.colors.skin,
     hairGradients: ctx.dol.colors.hairGradients,
   };

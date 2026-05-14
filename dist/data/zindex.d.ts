@@ -5,6 +5,7 @@ export declare const Z: {
     readonly TAIL: 9;
     readonly BACK_HAIR: 10;
     readonly BACK_LOWER: 15;
+    readonly HIRSUTE: 25;
     readonly BASE: 20;
     readonly FACE_BASE: 21;
     readonly EYES: 30;
@@ -69,6 +70,7 @@ export declare const Z: {
     readonly HEAD: 150;
     readonly OVER_HEAD: 152;
     readonly OLD_OVER_UPPER: 164;
+    readonly TAIL_PENIS_COVER: 165;
 };
 export type ZKey = keyof typeof Z;
 export declare const Z_OFFSET: {

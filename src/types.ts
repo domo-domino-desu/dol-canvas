@@ -102,11 +102,19 @@ export type ClothingSlotPayload = ClothingWorn | null | undefined;
 
 export interface TransformDetail {
   翅膀?: string; // wing variant, e.g. "default" | "classic" | "cherub"
+  翅膀状态?: "idle" | "cover" | "flaunt";
+  左翅膀状态?: "idle" | "cover";
+  右翅膀状态?: "idle" | "cover";
+  翅膀层级?: "前" | "后";
   光环?: string; // halo variant, e.g. "default" | "celestial" | "traditional"
   耳朵?: string; // ear variant (for cat/wolf/fox/cow)
   尾巴?: string; // tail variant (for cat/wolf/fox/cow)
+  尾巴状态?: "idle" | "cover" | "flaunt";
+  尾巴层级?: "前" | "后";
   角?: string; // horn variant (for demon/cow)
-  羽毛?: string;
+  颊羽?: string;
+  覆羽?: string;
+  阴毛?: string;
   眼睛?: string;
   脸颊?: string;
 }
@@ -137,10 +145,12 @@ export interface CharacterPayload {
   阴茎?: boolean; // has penis
   阴茎状态?: "soft" | "hard"; // default "soft"
   阴茎大小?: number; // 0-6, default 2
+  包茎?: boolean; // use -virgin penis sprites
   睾丸?: boolean; // has balls (default true if 阴茎)
   避孕套?: CondomPayload;
   精液?: CumPayload;
   孕肚?: number; // belly level 0-24 (0 = none)
+  覆盖孕肚?: boolean; // maps to DoL bellyTucked; default false
   左臂?: ArmState; // default "idle"
   右臂?: RightArmState; // default "idle"
 

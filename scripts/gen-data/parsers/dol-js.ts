@@ -148,6 +148,7 @@ export function parseColoursJs(filePath: string): ParsedColours {
     hair: cloneFilter(colors.hair ?? []),
     eyes: cloneFilter(colors.eyes ?? []),
     clothes: cloneFilter(colors.clothes ?? []),
+    condom: cloneFilter(colors.condom ?? []),
     skin: cloneFilter(colors.skin_options ?? {}),
     hairGradients: convertHairGradients(colors.hairgradients_prototypes),
   } as ParsedColours;

@@ -1,5 +1,5 @@
 import type { ColorFilter, LayerSpec } from "../types";
-export type MaterialType = "cloth" | "hair" | "eyes" | "skin";
+export type MaterialType = "cloth" | "hair" | "eyes" | "skin" | "condom";
 export type MaterialColorEntry = {
     variable: string;
     name: string;

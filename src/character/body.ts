@@ -156,12 +156,11 @@ export function buildBodyLayers(state: ResolvedState): LayerSpec[] {
   if (p.阴茎) {
     const pState = p.阴茎状态 ?? "soft";
     const pSize = p.阴茎大小 ?? 2;
+    const pStem = `${pState}${p.包茎 ? "-virgin" : ""}-${pSize}`;
     const hasBalls = p.睾丸 !== false;
     layers.push({
       id: "penis",
-      src: hasBalls
-        ? `${b}body/penis/${pState}-${pSize}.png`
-        : `${b}body/penis-no-balls/${pState}-${pSize}.png`,
+      src: hasBalls ? `${b}body/penis/${pStem}.png` : `${b}body/penis-no-balls/${pStem}.png`,
       z: Z.GENITALS,
       animation: BREATH,
     });
@@ -171,7 +170,7 @@ export function buildBodyLayers(state: ResolvedState): LayerSpec[] {
         src: `${b}body/penis/condom-${pState}-${pSize}.png`,
         z: Z.UNDER_PARASITE,
         alpha: 0.4,
-        filter: materialFilter("cloth", p.避孕套.颜色),
+        filter: materialFilter("condom", p.避孕套.颜色 || "plain"),
         animation: BREATH,
       });
     }

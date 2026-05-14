@@ -861,6 +861,80 @@
       }
     }
   ],
+  "condom": [
+    {
+      "variable": "red",
+      "name": "red",
+      "cnName": "红色",
+      "filter": {
+        "blend": "#EC3535"
+      }
+    },
+    {
+      "variable": "blue",
+      "name": "blue",
+      "cnName": "蓝色",
+      "filter": {
+        "blend": "#4372FF"
+      }
+    },
+    {
+      "variable": "lblue",
+      "name": "light blue",
+      "cnName": "浅蓝色",
+      "filter": {
+        "blend": "#559BC0"
+      }
+    },
+    {
+      "variable": "green",
+      "name": "green",
+      "cnName": "绿色",
+      "filter": {
+        "blend": "#38B20A"
+      }
+    },
+    {
+      "variable": "lime",
+      "name": "lime",
+      "cnName": "酸橙色",
+      "filter": {
+        "blend": "#7caf7c"
+      }
+    },
+    {
+      "variable": "purple",
+      "name": "purple",
+      "cnName": "紫色",
+      "filter": {
+        "blend": "#AA4BC8"
+      }
+    },
+    {
+      "variable": "orange",
+      "name": "orange",
+      "cnName": "橘黄色",
+      "filter": {
+        "blend": "#f28500"
+      }
+    },
+    {
+      "variable": "pink",
+      "name": "pink",
+      "cnName": "粉色",
+      "filter": {
+        "blend": "#E40081"
+      }
+    },
+    {
+      "variable": "plain",
+      "name": "plain",
+      "cnName": "素色",
+      "filter": {
+        "blend": "#f28500"
+      }
+    }
+  ],
   "skin": {
     "light": {
       "gradient": ["#ffffff", "#ffd2ac"],

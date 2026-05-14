@@ -14,21 +14,33 @@ type TransformEntry = {
 const transforms = transformationsData as Record<string, TransformEntry>;
 const BREATH = "playerBreath";
 
-// Which parts to show in idle/display state, and their z-indices
-// Only render the parts relevant for a non-combat, idle pose
-const IDLE_PARTS: Record<string, { z: number }> = {
-  "wings-idle": { z: Z.BACK_HAIR },
+const SIMPLE_PARTS: Record<string, { z: number }> = {
   halo: { z: Z.OVER_HEAD_BACK },
   ears: { z: Z.BASE_HEAD },
-  "tail-idle": { z: Z.BACK_LOWER },
   horns: { z: Z.HORNS },
-  feathers: { z: Z.BACK_HAIR },
   eyes: { z: Z.IRIS_ACC },
   cheeks: { z: Z.LOWER },
 };
 
-function stripDirectionalSuffix(variant: string): string {
-  return variant.replace(/-(back|front|left|right)$/, "");
+type TransformDetailHints = {
+  翅膀?: string;
+  光环?: string;
+  耳朵?: string;
+  尾巴?: string;
+  角?: string;
+  眼睛?: string;
+  脸颊?: string;
+  颊羽?: string;
+  覆羽?: string;
+  阴毛?: string;
+};
+
+function variantBase(variant: string): string {
+  return variant.replace(/-(back|front)$/, "").replace(/-(left|right)(?=-|$)/, "");
+}
+
+function hasDirectionalVariants(variants: string[]): boolean {
+  return variants.some((variant) => /-(left|right)(?:-|$)/.test(variant));
 }
 
 function primaryHairColor(payload: ResolvedState["payload"]): string | undefined {
@@ -41,8 +53,13 @@ function filterForPart(
   payload: ResolvedState["payload"],
 ): ColorFilter | undefined {
   const rule = transformationFilterRules[transformType];
-  if (rule?.fixed?.parts.includes(partKey)) return rule.fixed.filter;
-  if (rule?.inheritHair?.includes(partKey)) {
+  const canonicalPart = partKey.startsWith("wings-")
+    ? "wings-idle"
+    : partKey.startsWith("tail-")
+      ? "tail-idle"
+      : partKey;
+  if (rule?.fixed?.parts.includes(canonicalPart)) return rule.fixed.filter;
+  if (rule?.inheritHair?.includes(canonicalPart)) {
     return materialFilter("hair", primaryHairColor(payload));
   }
 
@@ -53,25 +70,28 @@ function filterForPart(
 function resolveVariant(
   dirKey: string,
   available: string[],
-  detail: Record<string, string | undefined>,
+  detail: TransformDetailHints,
   labels: Record<string, string> | undefined,
 ): string {
   if (!available.length) return "default";
 
   const normalized = available.map((variant) => ({
     variant,
-    base: stripDirectionalSuffix(variant),
-    label: labels?.[variant] ?? labels?.[stripDirectionalSuffix(variant)],
+    base: variantBase(variant),
+    label: labels?.[variant] ?? labels?.[variantBase(variant)],
   }));
 
   // Check if user specified a variant for this part type
   const partHint: Record<string, string | undefined> = {
     "wings-idle": detail.翅膀,
+    "wings-cover": detail.翅膀,
+    "wings-flaunt": detail.翅膀,
     halo: detail.光环,
     ears: detail.耳朵,
     "tail-idle": detail.尾巴,
+    "tail-cover": detail.尾巴,
+    "tail-flaunt": detail.尾巴,
     horns: detail.角,
-    feathers: detail.羽毛,
     eyes: detail.眼睛,
     cheeks: detail.脸颊,
   };
@@ -88,6 +108,39 @@ function resolveVariant(
   // Prefer 'default' variant if available
   const def = normalized.find(({ base }) => base === "default");
   return def?.base ?? normalized[0]!.base;
+}
+
+function variantForBase(available: string[], base: string): string | undefined {
+  return (
+    available.find((variant) => variantBase(variant) === base) ??
+    available.find((variant) => variant === base) ??
+    available.find((variant) => variant.startsWith(base))
+  );
+}
+
+function directionalVariantForBase(
+  available: string[],
+  base: string,
+  side: "left" | "right",
+): string | undefined {
+  return (
+    available.find((variant) => variantBase(variant) === base && variant.includes(`-${side}`)) ??
+    available.find((variant) => variant.includes(`-${side}`))
+  );
+}
+
+function prefixedVariant(
+  available: string[],
+  prefix: "malar" | "plumage" | "pubes",
+  hint: string | undefined,
+): string | undefined {
+  if (!hint) return undefined;
+  const target = hint === "default" ? `${prefix}-default` : hint;
+  return (
+    available.find((variant) => variant === target) ??
+    available.find((variant) => variant === `${prefix}-${target}`) ??
+    available.find((variant) => variant.startsWith(`${prefix}-${hint}`))
+  );
 }
 
 // Find a transform entry by CN name
@@ -113,60 +166,145 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
   const layers: LayerSpec[] = [];
   const b = baseUrl;
 
-  for (const [partKey, variants] of Object.entries(transform.parts)) {
-    const zDef = IDLE_PARTS[partKey];
-    if (!zDef) continue; // skip non-idle parts (cover, flaunt, etc.)
+  const detailHints: TransformDetailHints = {
+    翅膀: detail.翅膀,
+    光环: detail.光环,
+    耳朵: detail.耳朵,
+    尾巴: detail.尾巴,
+    角: detail.角,
+    眼睛: detail.眼睛,
+    脸颊: detail.脸颊,
+    颊羽: detail.颊羽,
+    覆羽: detail.覆羽,
+    阴毛: detail.阴毛,
+  };
+
+  function pushTransformLayer(partKey: string, variant: string, z: number): void {
+    layers.push({
+      id: `transform-${partKey}-${variant}`,
+      src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
+      z,
+      filter: filterForPart(dirName, partKey, payload),
+      animation: BREATH,
+    });
+  }
+
+  function pushWings(): void {
+    const idleVariants = transform.parts["wings-idle"] ?? [];
+    const requestedState = detail.翅膀状态 ?? "idle";
+    const requestedPart = `wings-${requestedState}`;
+    const statePart = transform.parts[requestedPart] ? requestedPart : "wings-idle";
+    const globalState = statePart.replace("wings-", "") as "idle" | "cover" | "flaunt";
+    const variants = transform.parts[statePart] ?? idleVariants;
+    if (!variants.length && !idleVariants.length) return;
+
+    const base = resolveVariant(
+      idleVariants.length ? "wings-idle" : statePart,
+      idleVariants.length ? idleVariants : variants,
+      detailHints,
+      transform.variantLabels?.[idleVariants.length ? "wings-idle" : statePart],
+    );
+    const layerZ =
+      globalState === "cover"
+        ? Z.TAIL_PENIS_COVER
+        : detail.翅膀层级 === "后"
+          ? Z.OVER_HEAD_BACK
+          : Z.BACK_HAIR;
+
+    if (globalState !== "idle" && variants.length && !hasDirectionalVariants(variants)) {
+      const variant = variantForBase(variants, base);
+      if (variant) pushTransformLayer(statePart, variant, layerZ);
+      return;
+    }
+
+    const leftState = detail.左翅膀状态 ?? (globalState === "cover" ? "cover" : "idle");
+    const rightState = detail.右翅膀状态 ?? (globalState === "cover" ? "cover" : "idle");
+
+    if ((leftState === "idle" || rightState === "idle") && idleVariants.length) {
+      const idleVariant = variantForBase(idleVariants, base);
+      if (idleVariant) {
+        pushTransformLayer(
+          "wings-idle",
+          idleVariant,
+          detail.翅膀层级 === "后" ? Z.OVER_HEAD_BACK : Z.BACK_HAIR,
+        );
+      }
+    }
+
+    const coverVariants = transform.parts["wings-cover"] ?? [];
+    if (!coverVariants.length) return;
+    const coverBase = resolveVariant(
+      "wings-cover",
+      coverVariants,
+      detailHints,
+      transform.variantLabels?.["wings-cover"],
+    );
+    if (leftState === "cover") {
+      const variant = directionalVariantForBase(coverVariants, coverBase, "left");
+      if (variant) pushTransformLayer("wings-cover", variant, Z.TAIL_PENIS_COVER);
+    }
+    if (rightState === "cover") {
+      const variant = directionalVariantForBase(coverVariants, coverBase, "right");
+      if (variant) pushTransformLayer("wings-cover", variant, Z.TAIL_PENIS_COVER);
+    }
+  }
+
+  function pushTail(): void {
+    const tailState = detail.尾巴状态 ?? "idle";
+    const partKey = transform.parts[`tail-${tailState}`] ? `tail-${tailState}` : "tail-idle";
+    const variants = transform.parts[partKey] ?? [];
+    if (!variants.length) return;
+    const base = resolveVariant(partKey, variants, detailHints, transform.variantLabels?.[partKey]);
+    const variant = variantForBase(variants, base);
+    if (!variant) return;
+    const z =
+      tailState === "cover" || tailState === "flaunt"
+        ? Z.TAIL_PENIS_COVER
+        : detail.尾巴层级 === "后"
+          ? Z.TAIL
+          : Z.BACK_LOWER;
+    pushTransformLayer(partKey, variant, z);
+  }
+
+  pushWings();
+  pushTail();
+
+  for (const [partKey, zDef] of Object.entries(SIMPLE_PARTS)) {
+    const variants = transform.parts[partKey];
+    if (!variants?.length) continue;
 
     const variant = resolveVariant(
       partKey,
       variants,
-      {
-        翅膀: detail.翅膀,
-        光环: detail.光环,
-        耳朵: detail.耳朵,
-        尾巴: detail.尾巴,
-        角: detail.角,
-        羽毛: detail.羽毛,
-        眼睛: detail.眼睛,
-        脸颊: detail.脸颊,
-      },
+      detailHints,
       transform.variantLabels?.[partKey],
     );
-    const filter = filterForPart(dirName, partKey, payload);
 
-    // Halo has back/front variants — add both
     if (partKey === "halo") {
       const back =
         variants.find((v) => v === `${variant}-back`) ?? variants.find((v) => v.endsWith("-back"));
       const front =
         variants.find((v) => v === `${variant}-front`) ??
         variants.find((v) => v.endsWith("-front"));
-      if (back) {
-        layers.push({
-          id: `transform-halo-back`,
-          src: `${b}transformations/${dirName}/${partKey}/${back}.png`,
-          z: Z.OVER_HEAD_BACK,
-          animation: BREATH,
-        });
-      }
-      if (front) {
-        layers.push({
-          id: `transform-halo-front`,
-          src: `${b}transformations/${dirName}/${partKey}/${front}.png`,
-          z: Z.OLD_OVER_UPPER,
-          animation: BREATH,
-        });
-      }
+      if (back) pushTransformLayer("halo", back, Z.OVER_HEAD_BACK);
+      if (front) pushTransformLayer("halo", front, Z.OLD_OVER_UPPER);
       continue;
     }
 
-    layers.push({
-      id: `transform-${partKey}`,
-      src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
-      z: zDef.z,
-      filter,
-      animation: BREATH,
-    });
+    pushTransformLayer(partKey, variant, zDef.z);
+  }
+
+  if (dirName === "bird") {
+    const featherVariants = transform.parts.feathers ?? [];
+    const featherLayers = [
+      ["malar", detail.颊羽, Z.BACK_HAIR],
+      ["plumage", detail.覆羽, Z.BLUSH],
+      ["pubes", detail.阴毛, Z.HIRSUTE],
+    ] as const;
+    for (const [prefix, hint, z] of featherLayers) {
+      const variant = prefixedVariant(featherVariants, prefix, hint);
+      if (variant) pushTransformLayer("feathers", variant, z);
+    }
   }
 
   return layers;

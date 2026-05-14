@@ -1,6 +1,6 @@
 {
   "name": "dol-canvas",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Degrees of Lewdity style canvas character renderer with a Chinese payload API.",
   "workspaces": [
     "demo"
@@ -49,6 +49,7 @@
     "check": "bun run lint && bun run typecheck"
   },
   "dependencies": {
+    "tiny-pinyin": "^1.3.2",
     "vue": "^3.5.0"
   },
   "devDependencies": {

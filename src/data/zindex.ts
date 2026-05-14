@@ -6,6 +6,7 @@ export const Z = {
   TAIL: 9,
   BACK_HAIR: 10,
   BACK_LOWER: 15,
+  HIRSUTE: 25,
   BASE: 20,
   FACE_BASE: 21,
   EYES: 30,
@@ -70,6 +71,7 @@ export const Z = {
   HEAD: 150,
   OVER_HEAD: 152,
   OLD_OVER_UPPER: 164,
+  TAIL_PENIS_COVER: 165,
 } as const;
 
 export type ZKey = keyof typeof Z;

@@ -3,14 +3,10 @@ import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLayers } from "@/character/builder";
 import ignoreRuleConfig from "./render-coverage-ignore-rules.json";
-import type {
-  CharacterPayload,
-  ClothingWorn,
-  HairColorStyle,
-  HairLength,
-  TransformDetail,
-} from "@/types";
-import { clothesData, faceData, hairData, i18nData, transformationsData } from "@/data/generated";
+import type { CharacterPayload, ClothingWorn, HairColorStyle } from "@/types";
+import type { PayloadListItem, ResolvedPayloadOption } from "@/data/options";
+import { resolvePayloadOptions } from "@/data/options";
+import { clothesData, hairData } from "@/data/generated";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const IMG_ROOT = "img";
@@ -42,10 +38,6 @@ type ConfigIgnoreRule = {
   paths?: string[];
   prefixes?: string[];
   regexes?: string[];
-};
-
-type Product<T extends readonly (readonly unknown[])[]> = {
-  [K in keyof T]: T[K] extends readonly (infer U)[] ? U : never;
 };
 
 const slotCn = {
@@ -148,13 +140,6 @@ function configuredIgnoreRules(config: ConfigIgnoreRule[]): IgnoreRule[] {
         regexes.some((regex) => regex.test(path)),
     };
   });
-}
-
-function cartesian<const T extends readonly (readonly unknown[])[]>(...arrays: T): Product<T>[] {
-  return arrays.reduce<unknown[][]>(
-    (acc, array) => acc.flatMap((combo) => array.map((value) => [...combo, value])),
-    [[]],
-  ) as Product<T>[];
 }
 
 function unusedHairAssetOutsideGeneratedOptions(path: string): boolean {
@@ -293,6 +278,50 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
+function optionFor(key: string, payload: CharacterPayload = {}): ResolvedPayloadOption | undefined {
+  return resolvePayloadOptions(payload).find((option) => option.key === key);
+}
+
+function listOptions(key: string, payload: CharacterPayload = {}): PayloadListItem[] {
+  const option = optionFor(key, payload);
+  return option?.type === "list" ? option.options : [];
+}
+
+function listValues(key: string, payload: CharacterPayload = {}): string[] {
+  return listOptions(key, payload).map((option) => option.value);
+}
+
+function numberValues(key: string, payload: CharacterPayload = {}): number[] {
+  const option = optionFor(key, payload);
+  if (option?.type !== "number") return [];
+  const result: number[] = [];
+  for (let value = option.min; value <= option.max; value += option.step ?? 1) {
+    result.push(value);
+  }
+  return result;
+}
+
+function clothingPayload(
+  slotCnName: (typeof slotCn)[SlotKey],
+  item: ClothingItem,
+): CharacterPayload {
+  return {
+    衣物: {
+      [slotCnName]: { 名称: item.cnName },
+    },
+  } as CharacterPayload;
+}
+
+function optionMetaKey(option: PayloadListItem): string | undefined {
+  const key = option.meta?.key;
+  return typeof key === "string" ? key : undefined;
+}
+
+function optionMetaEn(option: PayloadListItem): string | undefined {
+  const en = option.meta?.en;
+  return typeof en === "string" ? en : undefined;
+}
+
 function addCase(sources: Source[], caseName: string, payload: CharacterPayload): Source[] {
   const added: Source[] = [];
   for (const layer of buildLayers(payload, BASE_URL)) {
@@ -309,37 +338,45 @@ function addCase(sources: Source[], caseName: string, payload: CharacterPayload)
   return added;
 }
 
-function colorPayload(item: ClothingItem): Pick<ClothingWorn, "主色调" | "第二色调"> {
+function colorPayload(
+  slotCnName: (typeof slotCn)[SlotKey],
+  item: ClothingItem,
+): Pick<ClothingWorn, "主色调" | "第二色调"> {
+  const payload = clothingPayload(slotCnName, item);
+  const primary = listValues(`衣物.${slotCnName}.主色调`, payload);
+  const secondary = listValues(`衣物.${slotCnName}.第二色调`, payload);
   return {
-    ...(item.colorOptions?.length
-      ? { 主色调: item.colorOptions.includes("white") ? "white" : item.colorOptions[0] }
+    ...(primary.length
+      ? { 主色调: primary.find((value) => value === "白色" || value === "white") ?? primary[0] }
       : {}),
-    ...(item.accColorOptions?.length
-      ? { 第二色调: item.accColorOptions.includes("black") ? "black" : item.accColorOptions[0] }
+    ...(secondary.length
+      ? {
+          第二色调:
+            secondary.find((value) => value === "黑色" || value === "black") ?? secondary[0],
+        }
       : {}),
   };
 }
 
-function hasBreastImage(item: ClothingItem): boolean {
-  if (!item.breastImg) return false;
-  if (typeof item.breastImg === "number") return item.breastImg !== 0;
-  return Object.values(item.breastImg).some((value) => value !== null && value !== undefined);
-}
-
-function clothingCapabilities(slot: SlotKey, item: ClothingItem): ClothingCapabilities {
+function clothingCapabilities(
+  cn: (typeof slotCn)[SlotKey],
+  item: ClothingItem,
+): ClothingCapabilities {
+  const payload = clothingPayload(cn, item);
+  const states = listValues(`衣物.${cn}.状态`, payload);
+  const breastSizes = numberValues(`衣物.${cn}.胸部层级`, payload);
+  const patterns = listValues(`衣物.${cn}.图案`, payload);
   return {
-    states: item.states.length ? item.states : ["full"],
-    breastSizes:
-      slot === "upper" || slot === "under-upper" || (slot === "lower" && hasBreastImage(item))
-        ? [0, 1, 2, 3, 4, 5, 6]
-        : [3],
-    patterns: unique([undefined, ...(item.patternOptions ?? [])]),
-    leftArms: ["idle", "cover"],
-    rightArms: ["idle", "cover", "hold"],
+    states: states.length ? states : ["full"],
+    breastSizes: breastSizes.length ? breastSizes : [3],
+    patterns: unique([undefined, ...patterns]),
+    leftArms: listValues("左臂") as Array<NonNullable<CharacterPayload["左臂"]>>,
+    rightArms: listValues("右臂") as Array<NonNullable<CharacterPayload["右臂"]>>,
   };
 }
 
 function clothingWorn(
+  cn: (typeof slotCn)[SlotKey],
   item: ClothingItem,
   state: string,
   pattern?: string,
@@ -347,7 +384,7 @@ function clothingWorn(
   const worn: ClothingWorn & Record<string, string | undefined> = {
     名称: item.cnName,
     状态: state as ClothingWorn["状态"],
-    ...colorPayload(item),
+    ...colorPayload(cn, item),
   };
   if (pattern) {
     worn.图案 = pattern;
@@ -356,8 +393,13 @@ function clothingWorn(
   return worn;
 }
 
-function baseClothingWorn(item: ClothingItem, states: string[]): ClothingWorn {
-  return clothingWorn(item, states[0] ?? "full", item.patternOptions?.[0]);
+function baseClothingWorn(
+  cn: (typeof slotCn)[SlotKey],
+  item: ClothingItem,
+  states: string[],
+): ClothingWorn {
+  const payload = clothingPayload(cn, item);
+  return clothingWorn(cn, item, states[0] ?? "full", listValues(`衣物.${cn}.图案`, payload)[0]);
 }
 
 function addStandardClothingCases(
@@ -367,31 +409,94 @@ function addStandardClothingCases(
   item: ClothingItem,
   capabilities: ClothingCapabilities,
 ): void {
-  for (const [state, 胸部, pattern, 左臂, 右臂] of cartesian(
-    capabilities.states,
-    capabilities.breastSizes,
-    capabilities.patterns,
-    capabilities.leftArms,
-    capabilities.rightArms,
-  )) {
-    const worn = clothingWorn(item, state, pattern);
-    addCase(sources, `clothes/${slot}/${item.name}/${state}/b${胸部}/${左臂}/${右臂}`, {
+  const baseState = capabilities.states[0] ?? "full";
+  const baseBreast = capabilities.breastSizes.includes(3) ? 3 : (capabilities.breastSizes[0] ?? 3);
+  const baseLeft = capabilities.leftArms[0] ?? "idle";
+  const baseRight = capabilities.rightArms[0] ?? "idle";
+  const addClothingCase = (
+    suffix: string,
+    state = baseState,
+    胸部 = baseBreast,
+    pattern: string | undefined = undefined,
+    左臂 = baseLeft,
+    右臂 = baseRight,
+    patch: Partial<ClothingWorn> = {},
+  ) => {
+    const worn = { ...clothingWorn(cn, item, state, pattern), ...patch };
+    addCase(sources, `clothes/${slot}/${item.name}/${suffix}`, {
       胸部,
       左臂,
       右臂,
       衣物: { [cn]: worn },
     } as CharacterPayload);
-    if (slot === "lower" && (item.name.includes("pinafore") || item.cnName.includes("连衣裙"))) {
-      addCase(
-        sources,
-        `clothes/${slot}/${item.name}/schoolblouse/${state}/b${胸部}/${左臂}/${右臂}`,
-        {
-          胸部,
-          左臂,
-          右臂,
-          衣物: { 上装: { 名称: "学校衬衫" }, [cn]: worn },
-        } as CharacterPayload,
+  };
+
+  addClothingCase(`base/${baseState}/b${baseBreast}/${baseLeft}/${baseRight}`);
+  for (const state of capabilities.states) {
+    addClothingCase(`state/${state}`, state);
+  }
+  for (const 胸部 of capabilities.breastSizes) {
+    addClothingCase(`breast/${胸部}`, baseState, 胸部);
+  }
+  for (const pattern of capabilities.patterns.filter((value): value is string => !!value)) {
+    addClothingCase(`pattern/${pattern}`, baseState, baseBreast, pattern);
+    for (const 胸部 of capabilities.breastSizes) {
+      addClothingCase(`pattern-breast/${pattern}/b${胸部}`, baseState, 胸部, pattern);
+    }
+    for (const 左臂 of capabilities.leftArms) {
+      addClothingCase(`pattern-left-arm/${pattern}/${左臂}`, baseState, baseBreast, pattern, 左臂);
+    }
+    for (const 右臂 of capabilities.rightArms) {
+      addClothingCase(
+        `pattern-right-arm/${pattern}/${右臂}`,
+        baseState,
+        baseBreast,
+        pattern,
+        baseLeft,
+        右臂,
       );
+    }
+  }
+  for (const 左臂 of capabilities.leftArms) {
+    addClothingCase(`left-arm/${左臂}`, baseState, baseBreast, undefined, 左臂);
+  }
+  for (const 右臂 of capabilities.rightArms) {
+    addClothingCase(`right-arm/${右臂}`, baseState, baseBreast, undefined, baseLeft, 右臂);
+  }
+  for (const 主色调 of listValues(`衣物.${cn}.主色调`, clothingPayload(cn, item))) {
+    addClothingCase(
+      `primary-color/${主色调}`,
+      baseState,
+      baseBreast,
+      undefined,
+      baseLeft,
+      baseRight,
+      {
+        主色调,
+      },
+    );
+  }
+  for (const 第二色调 of listValues(`衣物.${cn}.第二色调`, clothingPayload(cn, item))) {
+    addClothingCase(
+      `secondary-color/${第二色调}`,
+      baseState,
+      baseBreast,
+      undefined,
+      baseLeft,
+      baseRight,
+      { 第二色调 },
+    );
+  }
+
+  for (const state of capabilities.states) {
+    const worn = clothingWorn(cn, item, state);
+    if (slot === "lower" && (item.name.includes("pinafore") || item.cnName.includes("连衣裙"))) {
+      addCase(sources, `clothes/${slot}/${item.name}/schoolblouse/${state}`, {
+        胸部: baseBreast,
+        左臂: baseLeft,
+        右臂: baseRight,
+        衣物: { 上装: { 名称: "学校衬衫" }, [cn]: worn },
+      } as CharacterPayload);
     }
   }
 }
@@ -400,12 +505,21 @@ const branchHandlers: BranchHandler[] = [
   {
     hint: "替代",
     add: (sources, { slot, cn, item, states, breastSizes, baseWorn }) => {
-      for (const [state, 胸部] of cartesian(states, breastSizes)) {
-        addCase(sources, `clothes/${slot}/${item.name}/branch/alt/${state}/b${胸部}`, {
-          胸部,
+      const baseBreast = breastSizes.includes(3) ? 3 : breastSizes[0];
+      for (const state of states) {
+        addCase(sources, `clothes/${slot}/${item.name}/branch/alt/state/${state}`, {
+          胸部: baseBreast,
           左臂: "idle",
           右臂: "hold",
           衣物: { [cn]: { ...baseWorn, 状态: state as ClothingWorn["状态"], 替代: true } },
+        } as CharacterPayload);
+      }
+      for (const 胸部 of breastSizes) {
+        addCase(sources, `clothes/${slot}/${item.name}/branch/alt/breast/${胸部}`, {
+          胸部,
+          左臂: "idle",
+          右臂: "hold",
+          衣物: { [cn]: { ...baseWorn, 状态: states[0] as ClothingWorn["状态"], 替代: true } },
         } as CharacterPayload);
       }
     },
@@ -506,28 +620,52 @@ const branchHandlers: BranchHandler[] = [
 
 function handleBranchHints(sources: Source[], context: BranchContext): void {
   for (const handler of branchHandlers) {
-    if (handler.hint && !context.item.branchHints?.[handler.hint]) continue;
+    if (handler.hint) {
+      const payload = clothingPayload(context.cn, context.item);
+      const publicBranchOption =
+        handler.hint === "替代" || handler.hint === "兜帽" || handler.hint === "卷袖"
+          ? optionFor(`衣物.${context.cn}.${handler.hint}`, payload)
+          : undefined;
+      if (handler.hint === "替代" || handler.hint === "兜帽" || handler.hint === "卷袖") {
+        if (!publicBranchOption) continue;
+      } else if (!context.item.branchHints?.[handler.hint]) {
+        continue;
+      }
+    }
     if (handler.applies && !handler.applies(context)) continue;
     handler.add(sources, context);
   }
 }
 
 function addBodyCases(sources: Source[]): void {
-  const shapes = Object.keys((i18nData as typeof i18nData).bodyShapes) as Array<
-    NonNullable<CharacterPayload["身形"]>
+  const shapes = listValues("身形") as Array<NonNullable<CharacterPayload["身形"]>>;
+  const leftArms = listValues("左臂") as Array<NonNullable<CharacterPayload["左臂"]>>;
+  const rightArms = listValues("右臂") as Array<NonNullable<CharacterPayload["右臂"]>>;
+  const breastSizes = numberValues("胸部");
+  const bellySizes = numberValues("孕肚").filter((value) => value > 0);
+  const penisPayload: CharacterPayload = { 阴茎: true };
+  const penisStates = listValues("阴茎状态", penisPayload) as Array<
+    NonNullable<CharacterPayload["阴茎状态"]>
   >;
+  const penisSizes = numberValues("阴茎大小", penisPayload);
+  const condomColor = listValues("避孕套.颜色", penisPayload).find((value) => value === "红色");
+  const baseShape = shapes[0];
+
   for (const 身形 of shapes) {
-    for (const 左臂 of ["idle", "cover"] as const) {
-      for (const 右臂 of ["idle", "cover", "hold"] as const) {
+    for (const 左臂 of leftArms) {
+      for (const 右臂 of rightArms) {
         addCase(sources, `body/${身形}/${左臂}/${右臂}`, { 身形, 左臂, 右臂, 胸部: 3 });
       }
     }
-    for (let 胸部 = 0; 胸部 <= 6; 胸部++)
-      addCase(sources, `body/breasts/${身形}/${胸部}`, { 身形, 胸部 });
   }
-  for (let 孕肚 = 1; 孕肚 <= 24; 孕肚++) addCase(sources, `body/pregnant-belly/${孕肚}`, { 孕肚 });
-  for (const 阴茎状态 of ["soft", "hard"] as const) {
-    for (let 阴茎大小 = 0; 阴茎大小 <= 6; 阴茎大小++) {
+  for (const 胸部 of breastSizes) {
+    addCase(sources, `body/breasts/${胸部}`, { 身形: baseShape, 胸部 });
+  }
+  for (const 孕肚 of bellySizes) {
+    addCase(sources, `body/pregnant-belly/${孕肚}`, { 孕肚 });
+  }
+  for (const 阴茎状态 of penisStates) {
+    for (const 阴茎大小 of penisSizes) {
       addCase(sources, `body/penis/${阴茎状态}/${阴茎大小}/balls`, {
         阴茎: true,
         阴茎状态,
@@ -544,11 +682,11 @@ function addBodyCases(sources: Source[]): void {
         阴茎: true,
         阴茎状态,
         阴茎大小,
-        避孕套: { 类型: "plain", 颜色: "red" },
+        避孕套: { 类型: "plain", 颜色: condomColor },
       });
     }
   }
-  for (let i = 0; i <= 5; i++) {
+  for (const i of numberValues("精液.胸部")) {
     addCase(sources, `body/cum/${i}`, {
       精液: {
         胸部: i,
@@ -568,10 +706,8 @@ function addBodyCases(sources: Source[]): void {
 }
 
 function addFaceCases(sources: Source[]): void {
-  const demeanors = Object.keys((faceData as typeof faceData).demeanorEn);
-  const brows = Object.keys((faceData as typeof faceData).browsMap) as Array<
-    NonNullable<CharacterPayload["眉毛"]>
-  >;
+  const demeanors = listValues("仪态");
+  const brows = listValues("眉毛") as Array<NonNullable<CharacterPayload["眉毛"]>>;
   for (const 仪态 of demeanors) {
     addCase(sources, `face/demeanor/${仪态}`, { 仪态 });
     for (const 眉毛 of brows) {
@@ -585,24 +721,27 @@ function addFaceCases(sources: Source[]): void {
     addCase(sources, `face/${仪态}/eyes/half-closed`, { 仪态, 眼睛: { 半睁眼: true } });
     addCase(sources, `face/${仪态}/eyes/bloodshot`, { 仪态, 眼睛: { 血丝眼: true } });
   }
-  for (const 嘴部 of Object.keys((faceData as typeof faceData).mouthMap) as Array<
-    NonNullable<CharacterPayload["嘴部"]>
-  >) {
+  for (const 嘴部 of listValues("嘴部") as Array<NonNullable<CharacterPayload["嘴部"]>>) {
     addCase(sources, `face/mouth/${嘴部}`, { 嘴部 });
   }
-  for (let 脸红 = 1; 脸红 <= 5; 脸红++) addCase(sources, `face/blush/${脸红}`, { 脸红 });
-  for (let 泪水 = 1; 泪水 <= 4; 泪水++) addCase(sources, `face/tears/${泪水}`, { 泪水 });
+  for (const 脸红 of numberValues("脸红").filter((value) => value > 0)) {
+    addCase(sources, `face/blush/${脸红}`, { 脸红 });
+  }
+  for (const 泪水 of numberValues("泪水").filter((value) => value > 0)) {
+    addCase(sources, `face/tears/${泪水}`, { 泪水 });
+  }
 }
 
 function addHairCases(sources: Source[], logicIssues: LogicIssue[]): void {
-  const publicLengths = Object.entries(
-    (i18nData as typeof i18nData).hairLengths as Record<string, { en: string }>,
-  ) as Array<[HairLength, { en: string }]>;
+  const lengths = listOptions("发型.长度");
 
-  for (const style of (hairData as typeof hairData).hairStyles) {
-    for (const [长度, { en: len }] of publicLengths) {
-      const caseName = `hair/style/${style.name}/${len}`;
-      const added = addCase(sources, caseName, { 发型: { 发型: style.cnName, 长度 } });
+  for (const style of listOptions("发型.发型")) {
+    for (const length of lengths) {
+      const len = optionMetaEn(length) ?? length.value;
+      const caseName = `hair/style/${optionMetaKey(style) ?? style.value}/${len}`;
+      const added = addCase(sources, caseName, {
+        发型: { 发型: style.value, 长度: length.value as NonNullable<CharacterPayload["发长"]> },
+      });
       if (
         !added.some((source) => source.layerId === "hair-back" || source.layerId === "hair-sides")
       ) {
@@ -613,12 +752,13 @@ function addHairCases(sources: Source[], logicIssues: LogicIssue[]): void {
       }
     }
   }
-  for (const fringe of (hairData as typeof hairData).fringeStyles) {
-    for (const [长度, { en: len }] of publicLengths) {
-      const caseName = `hair/fringe/${fringe.name}/${len}`;
+  for (const fringe of listOptions("发型.刘海")) {
+    for (const length of lengths) {
+      const len = optionMetaEn(length) ?? length.value;
+      const caseName = `hair/fringe/${optionMetaKey(fringe) ?? fringe.value}/${len}`;
       const added = addCase(sources, caseName, {
-        发型: { 刘海: fringe.cnName, 长度 },
-        刘海: fringe.cnName,
+        发型: { 刘海: fringe.value, 长度: length.value as NonNullable<CharacterPayload["发长"]> },
+        刘海: fringe.value,
       });
       if (!added.some((source) => source.layerId === "hair-fringe")) {
         logicIssues.push({ caseName, issue: "fringe payload produced no hair-fringe layer" });
@@ -626,15 +766,19 @@ function addHairCases(sources: Source[], logicIssues: LogicIssue[]): void {
     }
   }
 
-  const styles = Object.keys(
-    (i18nData as typeof i18nData).hairColorStyles ?? {},
-  ) as HairColorStyle[];
+  const styles = listValues("发色详情.头发.分色模式") as HairColorStyle[];
+  const hairColors = listValues("发色");
+  const primary = hairColors.find((value) => value === "棕色") ?? hairColors[0];
+  const red = hairColors.find((value) => value === "红色") ?? hairColors[0];
+  const black = hairColors.find((value) => value === "黑色") ?? hairColors[0];
+  const blond = hairColors.find((value) => value === "浅金色") ?? hairColors[0];
+  const blue = hairColors.find((value) => value === "蓝色") ?? hairColors[0];
   for (const 分色模式 of styles) {
     addCase(sources, `hair/color/overall/${分色模式}`, {
-      发色: "棕色",
+      发色: primary,
       发色模式: "整体",
       发色详情: {
-        头发: { 分色模式, 发色: "red", 第二发色: "black" },
+        头发: { 分色模式, 发色: red, 第二发色: black },
       },
       发型: { 发型: "自然状态", 刘海: "自然状态", 长度: "到胸" },
     });
@@ -642,11 +786,11 @@ function addHairCases(sources: Source[], logicIssues: LogicIssue[]): void {
   for (const [index, 分色模式] of styles.entries()) {
     const 刘海分色模式 = styles[(index + 1) % styles.length] ?? 分色模式;
     addCase(sources, `hair/color/split/${分色模式}/${刘海分色模式}`, {
-      发色: "棕色",
+      发色: primary,
       发色模式: "拆分",
       发色详情: {
-        头发: { 分色模式, 发色: "red", 第二发色: "black" },
-        刘海: { 分色模式: 刘海分色模式, 发色: "blonde", 第二发色: "blue" },
+        头发: { 分色模式, 发色: red, 第二发色: black },
+        刘海: { 分色模式: 刘海分色模式, 发色: blond, 第二发色: blue },
       },
       发型: { 发型: "自然状态", 刘海: "自然状态", 长度: "到胸" },
     });
@@ -654,52 +798,116 @@ function addHairCases(sources: Source[], logicIssues: LogicIssue[]): void {
 }
 
 function addClothingCases(sources: Source[]): void {
-  for (const [slot, items] of Object.entries(clothesData as Record<SlotKey, ClothingItem[]>)) {
-    const cn = slotCn[slot as SlotKey];
-    for (const item of items) {
-      const capabilities = clothingCapabilities(slot as SlotKey, item);
-      addStandardClothingCases(sources, slot as SlotKey, cn, item, capabilities);
+  const clothingBySlot = clothesData as Record<SlotKey, ClothingItem[]>;
+  for (const slot of Object.keys(slotCn) as SlotKey[]) {
+    const cn = slotCn[slot];
+    for (const option of listOptions(`衣物.${cn}.名称`)) {
+      const item = clothingBySlot[slot].find(
+        (candidate) => candidate.name === optionMetaKey(option),
+      );
+      if (!item) continue;
+      const capabilities = clothingCapabilities(cn, item);
+      addStandardClothingCases(sources, slot, cn, item, capabilities);
       handleBranchHints(sources, {
-        slot: slot as SlotKey,
+        slot,
         cn,
         item,
         states: capabilities.states,
         breastSizes: capabilities.breastSizes,
-        baseWorn: baseClothingWorn(item, capabilities.states),
+        baseWorn: baseClothingWorn(cn, item, capabilities.states),
       });
     }
   }
 }
 
-function transformField(part: string): keyof TransformDetail | undefined {
-  return {
-    "wings-idle": "翅膀",
-    halo: "光环",
-    ears: "耳朵",
-    "tail-idle": "尾巴",
-    horns: "角",
-    feathers: "羽毛",
-    eyes: "眼睛",
-    cheeks: "脸颊",
-  }[part] as keyof TransformDetail | undefined;
-}
-
 function addTransformationCases(sources: Source[]): void {
-  for (const [key, transform] of Object.entries(
-    transformationsData as typeof transformationsData,
-  )) {
-    addCase(sources, `transform/${key}/default`, { 转化: transform.cnName, 发色: "棕色" });
-    for (const [part, variants] of Object.entries(transform.parts)) {
-      const field = transformField(part);
-      if (!field) continue;
-      for (const rawVariant of variants as string[]) {
-        const variant = rawVariant.replace(/-(back|front|left|right)$/, "");
-        addCase(sources, `transform/${key}/${part}/${variant}`, {
-          发色: "棕色",
-          转化: { 类型: transform.cnName, 细节: { [field]: variant } },
+  const hairColor = listValues("发色").find((value) => value === "棕色");
+  for (const transform of listOptions("转化")) {
+    const transformKey = optionMetaKey(transform) ?? transform.value;
+    addCase(sources, `transform/${transformKey}/default`, {
+      转化: transform.value,
+      发色: hairColor,
+    });
+
+    const transformPayload: CharacterPayload = { 转化: transform.value };
+    const detailOptions = resolvePayloadOptions(transformPayload).filter(
+      (option) =>
+        option.category === "transformation" && option.type === "list" && option.key !== "转化",
+    );
+    for (const option of detailOptions) {
+      if (option.type !== "list") continue;
+      const field = option.key.replace("转化.细节.", "");
+      for (const value of option.options.map((item) => item.value)) {
+        addCase(sources, `transform/${transformKey}/${field}/${value}`, {
+          发色: hairColor,
+          转化: { 类型: transform.value, 细节: { [field]: value } },
         } as CharacterPayload);
       }
     }
+  }
+}
+
+function addMaskHelperCases(sources: Source[]): void {
+  addCase(sources, "helpers/formfitting/curvy-upper", {
+    身形: "曲线",
+    衣物: { 上装: { 名称: "女式衬衫" } },
+  });
+  addCase(sources, "helpers/formfitting/slender-upper", {
+    身形: "瘦长",
+    衣物: { 上装: { 名称: "女式衬衫" } },
+  });
+  addCase(sources, "helpers/formfitting/curvy-under-upper", {
+    身形: "曲线",
+    衣物: { 内衣上装: { 名称: "运动内衣" } },
+  });
+  addCase(sources, "helpers/soft/uncovered", {
+    身形: "柔软",
+    衣物: {
+      上装: { 名称: "女式衬衫" },
+      下装: { 名称: "牛仔短裤" },
+      内衣上装: { 名称: "运动内衣" },
+      内衣下装: { 名称: "普通内裤" },
+      腿饰: { 名称: "长筒袜" },
+    },
+  } as CharacterPayload);
+  addCase(sources, "helpers/soft/covered-belly", {
+    身形: "柔软",
+    覆盖孕肚: true,
+    衣物: {
+      上装: { 名称: "女式衬衫" },
+      下装: { 名称: "牛仔短裤" },
+      内衣下装: { 名称: "普通内裤" },
+    },
+  } as CharacterPayload);
+  for (const 孕肚 of numberValues("孕肚").filter((value) => value >= 8)) {
+    addCase(sources, `helpers/belly/split/${孕肚}`, {
+      孕肚,
+      胸部: 4,
+      衣物: {
+        上装: { 名称: "校服衬衫" },
+        下装: { 名称: "牛仔短裤" },
+        内衣上装: { 名称: "运动内衣" },
+        内衣下装: { 名称: "普通内裤" },
+        腿饰: { 名称: "长筒袜" },
+      },
+    } as CharacterPayload);
+    addCase(sources, `helpers/belly/min/${孕肚}`, {
+      孕肚,
+      胸部: 4,
+      衣物: {
+        上装: { 名称: "毛衣" },
+        下装: { 名称: "牛仔短裤" },
+        内衣下装: { 名称: "普通内裤" },
+      },
+    } as CharacterPayload);
+    addCase(sources, `helpers/belly/cover-lower/${孕肚}`, {
+      孕肚,
+      胸部: 4,
+      衣物: {
+        上装: { 名称: "校服衬衫" },
+        下装: { 名称: "校服连衣裙" },
+      },
+    } as CharacterPayload);
   }
 }
 
@@ -714,6 +922,7 @@ addFaceCases(sources);
 addHairCases(sources, logicIssues);
 addClothingCases(sources);
 addTransformationCases(sources);
+addMaskHelperCases(sources);
 
 const referenced = new Map<string, Source[]>();
 for (const source of sources) {

@@ -111,6 +111,7 @@ export interface ParsedColours {
   hair: DolColorEntry[];
   eyes: DolColorEntry[];
   clothes: DolColorEntry[];
+  condom: DolColorEntry[];
   skin: Record<string, SkinOption>;
   hairGradients: Record<"fringe" | "sides", Record<string, HairGradientEntry>>;
 }

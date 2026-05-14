@@ -21,9 +21,17 @@
     ]
   },
   {
-    "name": "clothes: pregnancy/formfitting mask helper variants not implemented yet",
-    "prefixes": ["img/clothes/masks/"],
-    "regexes": ["/(?:preg|belly|shadow)-"]
+    "name": "clothes: legacy belly/formfitting helper assets not used by original idle renderer",
+    "paths": [
+      "img/clothes/belly/belly-mask-lower-shadow-2.png",
+      "img/clothes/belly/belly-mask-lower-shadow-3.png",
+      "img/clothes/belly/belly-mask-lower-shadow.png",
+      "img/clothes/belly/belly-mask-upper-shadow-2.png",
+      "img/clothes/belly/belly-mask-upper-shadow.png",
+      "img/clothes/belly/belly-mask.png",
+      "img/clothes/masks/formfitting-breasts.png",
+      "img/clothes/masks/soft-clip.png"
+    ]
   },
   {
     "name": "clothes: combat/special branches not exposed by payload",
@@ -34,5 +42,9 @@
     "regexes": [
       "^img/transformations/[^/]+/(wings-cover|wings-flaunt|tail-cover|tail-flaunt|hirsute)/"
     ]
+  },
+  {
+    "name": "transformations: loose feather particle animation not exposed by payload",
+    "paths": ["img/transformations/bird/feathers/loose.png"]
   }
 ]

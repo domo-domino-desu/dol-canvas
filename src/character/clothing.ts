@@ -23,18 +23,12 @@ import {
 import { pushLayer, sleeveZ, zFor } from "@/character/layer-compiler";
 
 function bellyClipMask(state: ResolvedState): string | undefined {
-  const belly = state.belly;
-  return belly >= 19 && belly <= 24
-    ? `${state.baseUrl}clothes/belly/mask-clip-${belly}.png`
-    : undefined;
+  return state.bellyMasks.clip;
 }
 
 function bellyMask(state: ResolvedState, item: ClothingItem): string | undefined {
-  const belly = state.belly;
-  if (belly < 15 || belly > 24) return undefined;
-  return item.pregType === "min"
-    ? `${state.baseUrl}clothes/belly/mask-min-${belly}.png`
-    : `${state.baseUrl}clothes/belly/mask-${belly}.png`;
+  void item;
+  return state.bellyMasks.mask;
 }
 
 function bellyDx(state: ResolvedState): number {
@@ -156,7 +150,10 @@ function clothingMasksForMain(
 ): string[] | undefined {
   const masks = [
     clothingMaskSrc(state, resolved.slot.dir, resolved.item, resolved.worn),
+    ...(resolved.slot.cn === "上装" ? (state.masksFor("upper") ?? []) : []),
+    ...(resolved.slot.cn === "内衣上装" ? (state.masksFor("underUpper") ?? []) : []),
     ...(resolved.slot.cn === "下装" ? (state.masksFor("lower") ?? []) : []),
+    ...(resolved.slot.cn === "内衣下装" ? (state.masksFor("underLower") ?? []) : []),
     ...(resolved.slot.cn === "腿饰" ? (state.masksFor("legs") ?? []) : []),
   ].filter((src): src is string => !!src);
   return masks.length ? masks : undefined;
@@ -165,9 +162,15 @@ function clothingMasksForMain(
 function breastMasks(state: ResolvedState, resolved: ResolvedClothing): string[] | undefined {
   const masks = [
     clothingMaskSrc(state, resolved.slot.dir, resolved.item, resolved.worn),
-    bellyMask(state, resolved.item),
+    state.belly >= 19 && state.bellyMasks.shirtBreasts
+      ? state.bellyMasks.shirtBreasts
+      : bellyMask(state, resolved.item),
   ].filter((src): src is string => !!src);
   return masks.length ? masks : undefined;
+}
+
+function withBrightness(filter: ColorFilter | undefined, brightness: number): ColorFilter {
+  return { ...filter, brightness };
 }
 
 type ClothingRenderContext = {
@@ -301,6 +304,93 @@ function applySleeveLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): voi
   }
 }
 
+function applyFittedLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, resolved, slot, item, imgBase, z, filter, accFilter } = ctx;
+  if (!["上装", "下装", "内衣上装", "内衣下装"].includes(slot.cn)) return;
+  if (state.belly > 7) return;
+  if (item.mainImage === 0) return;
+
+  const masks = state.fittedMasks[slot.cn];
+  if (!masks?.leftMove && !masks?.rightMove) return;
+
+  const stem = mainStem(resolved);
+  const soft = state.bodyShape === "soft";
+  if (masks.leftMove) {
+    pushLayer(layers, `cloth-${slot.cn}-fitted-left`, imgBase, stem, z, filter, {
+      dx: soft ? 2 : -2,
+      maskSrcs: [masks.leftMove],
+    });
+  }
+  if (masks.rightMove && state.bodyShape !== "slender") {
+    pushLayer(layers, `cloth-${slot.cn}-fitted-right`, imgBase, stem, z, filter, {
+      dx: soft ? -2 : 2,
+      maskSrcs: [masks.rightMove],
+    });
+  }
+
+  if (item.accessory !== 1 || item.accImage === 0) return;
+  const accStem = slotAccessoryStem(slot.cn, resolved);
+  if (masks.leftMove) {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-fitted-left-acc`,
+      imgBase,
+      availableStem(item, [accStem, "acc"]),
+      z + Z_OFFSET.ACC,
+      accFilter,
+      {
+        dx: soft ? 2 : -2,
+        maskSrcs: [masks.leftMove],
+      },
+    );
+  }
+  if (masks.rightMove && state.bodyShape !== "slender") {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-fitted-right-acc`,
+      imgBase,
+      availableStem(item, [accStem, "acc"]),
+      z + Z_OFFSET.ACC,
+      accFilter,
+      {
+        dx: soft ? -2 : 2,
+        maskSrcs: [masks.rightMove],
+      },
+    );
+  }
+}
+
+function applyFittedSleeveLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, slot, worn, item, imgBase, filter, accFilter } = ctx;
+  if (slot.cn !== "上装" && slot.cn !== "内衣上装") return;
+  if (state.belly > 7 || state.leftArm !== "idle") return;
+
+  const mask = state.fittedMasks[slot.cn]?.leftMove;
+  if (!mask) return;
+  if (item.sleeveImg) {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-left-sleeve-fitted`,
+      imgBase,
+      armPoseFile(state, worn, item, "left"),
+      sleeveZ(slot.cn, "left", state),
+      filterForColourMode(item.sleeveColour, worn) ?? filter,
+      { dx: -2, maskSrcs: [mask] },
+    );
+  }
+  if (item.sleeveImg && item.sleeveAccImg) {
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-left-sleeve-fitted-acc`,
+      imgBase,
+      armAccFileForWorn(state, worn, item, "left"),
+      sleeveZ(slot.cn, "left", state) + Z_OFFSET.SLEEVE_ACC,
+      accFilter,
+      { dx: -2, maskSrcs: [mask] },
+    );
+  }
+}
+
 function applyBreastLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
   const { state, resolved, slot, worn, item, imgBase, z, filter, accFilter } = ctx;
   if (slot.cn !== "上装" && slot.cn !== "内衣上装" && slot.cn !== "下装") return;
@@ -348,13 +438,119 @@ function applyAccessoryLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): 
   );
 }
 
+function applyBellyShadowLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
+  const { state, resolved, slot, item, imgBase, filter } = ctx;
+  if (slot.cn !== "下装" && slot.cn !== "内衣下装") return;
+  if (item.mainImage === 0) return;
+  if (slot.cn === "下装" && state.bellyMasks.hidesLower) return;
+  if (slot.cn === "内衣下装" && state.bellyMasks.hidesUnderLower) return;
+
+  const shadowMasks =
+    slot.cn === "下装" ? state.masksFor("lowerShadow") : state.masksFor("underLowerShadow");
+  if (!shadowMasks.length) return;
+
+  const brightness = state.belly >= 8 && state.belly <= 24 ? -0.25 : -0.4;
+  pushLayer(
+    layers,
+    `cloth-${slot.cn}-belly-shadow`,
+    imgBase,
+    mainStem(resolved),
+    Z.BELLY_CLOTHES_SHADOW,
+    withBrightness(filter, brightness),
+    { maskSrcs: shadowMasks },
+  );
+}
+
+function applyUpperSplitBellyLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): boolean {
+  const { state, resolved, slot, item, imgBase, z, filter, accFilter } = ctx;
+  const masks = state.bellyMasks;
+  if (slot.cn !== "上装" || !masks.shirtClip || item.mainImage === 0) return false;
+
+  const stem = mainStem(resolved);
+  const splitParts = [
+    {
+      id: "shadow",
+      mask: masks.shirtClip,
+      z: z - 1,
+      dx: 0,
+      dy: masks.shirtLeft ? 2 : 0,
+      brightness: -0.3,
+    },
+    {
+      id: "left",
+      mask: masks.shirtLeft,
+      z,
+      dx: state.belly >= 22 ? 12 : 8,
+      dy: -2,
+    },
+    { id: "left2", mask: masks.shirtLeft2, z, dx: state.belly >= 22 ? 14 : 10, dy: 0 },
+    {
+      id: "left-shadow",
+      mask: masks.shirtLeft,
+      z: z - 1,
+      dx: state.belly >= 22 ? 14 : 10,
+      dy: -2,
+      brightness: -0.3,
+    },
+    {
+      id: "left2-shadow",
+      mask: masks.shirtLeft2,
+      z: z - 1,
+      dx: state.belly >= 22 ? 16 : 12,
+      dy: 0,
+      brightness: -0.3,
+    },
+    { id: "right", mask: masks.shirtRight, z, dx: -2, dy: 0 },
+    { id: "right2", mask: masks.shirtRight2, z, dx: -4, dy: 0 },
+    { id: "right3", mask: masks.shirtRight3, z, dx: -6, dy: 0 },
+  ];
+
+  for (const part of splitParts) {
+    if (!part.mask) continue;
+    pushLayer(
+      layers,
+      `cloth-${slot.cn}-belly-split-${part.id}`,
+      imgBase,
+      stem,
+      part.z,
+      part.brightness ? withBrightness(filter, part.brightness) : filter,
+      { dx: part.dx, dy: part.dy, maskSrcs: [part.mask] },
+    );
+  }
+
+  if (item.accessory === 1 && item.accImage !== 0) {
+    const accStem = availableStem(item, [slotAccessoryStem(slot.cn, resolved), "acc"]);
+    for (const part of splitParts) {
+      if (!part.mask) continue;
+      pushLayer(
+        layers,
+        `cloth-${slot.cn}-belly-split-${part.id}-acc`,
+        imgBase,
+        accStem,
+        part.z + Z_OFFSET.ACC,
+        part.brightness ? withBrightness(accFilter, part.brightness) : accFilter,
+        { dx: part.dx, dy: part.dy, maskSrcs: [part.mask] },
+      );
+    }
+  }
+
+  return true;
+}
+
 function applyBellyLayers(ctx: ClothingRenderContext, layers: LayerSpec[]): void {
   const { state, resolved, slot, item, imgBase, filter, accFilter } = ctx;
   if (state.belly <= 7 || !["上装", "下装", "内衣上装", "内衣下装"].includes(slot.cn)) return;
+  if (slot.cn === "下装" && state.bellyMasks.hidesLower) return;
+  if (slot.cn === "内衣下装" && state.bellyMasks.hidesUnderLower) return;
+  if (slot.cn === "上装" && applyUpperSplitBellyLayers(ctx, layers)) return;
 
   const stem = mainStem(resolved);
   const clip =
-    slot.cn === "下装" || slot.cn === "内衣下装" ? bellyClipMask(state) : bellyMask(state, item);
+    slot.cn === "下装"
+      ? bellyClipMask(state)
+      : slot.cn === "内衣下装"
+        ? state.bellyMasks.underLowerClip
+        : bellyMask(state, item);
   pushLayer(layers, `cloth-${slot.cn}-belly`, imgBase, stem, Z.BELLY_CLOTHES, filter, {
     dx: bellyDx(state),
     maskSrcs: clip ? [clip] : undefined,
@@ -417,9 +613,12 @@ function buildResolvedClothingLayers(
 
   applyBackLayers(ctx, layers);
   applyMainLayers(ctx, layers);
+  applyFittedLayers(ctx, layers);
   applySleeveLayers(ctx, layers);
+  applyFittedSleeveLayers(ctx, layers);
   applyBreastLayers(ctx, layers);
   applyAccessoryLayers(ctx, layers);
+  applyBellyShadowLayers(ctx, layers);
   applyBellyLayers(ctx, layers);
   applyGenitalLayers(ctx, layers);
 

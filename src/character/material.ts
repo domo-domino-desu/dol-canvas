@@ -1,7 +1,7 @@
 import type { ColorFilter, LayerSpec } from "@/types";
 import { colorsData } from "@/data/generated";
 
-export type MaterialType = "cloth" | "hair" | "eyes" | "skin";
+export type MaterialType = "cloth" | "hair" | "eyes" | "skin" | "condom";
 
 export type MaterialColorEntry = {
   variable: string;
@@ -15,6 +15,7 @@ const materialColors = {
   hair: (colorsData as typeof colorsData).hair as MaterialColorEntry[],
   eyes: (colorsData as typeof colorsData).eyes as MaterialColorEntry[],
   skin: [] as MaterialColorEntry[],
+  condom: (colorsData as typeof colorsData).condom as MaterialColorEntry[],
 } satisfies Record<MaterialType, MaterialColorEntry[]>;
 
 const materialDefaults = {
@@ -30,6 +31,12 @@ const materialDefaults = {
     blendMode: "hard-light",
   },
   skin: {
+    blendMode: "hard-light",
+  },
+  condom: {
+    desaturate: true,
+    brightness: 0.4,
+    contrast: 1,
     blendMode: "hard-light",
   },
 } satisfies Record<MaterialType, ColorFilter>;
@@ -56,7 +63,7 @@ export function materialFilter(
     ...defaults,
     ...entry.filter,
     blendMode:
-      materialType === "cloth"
+      materialType === "cloth" || materialType === "condom"
         ? defaults.blendMode
         : (entry.filter.blendMode ?? defaults.blendMode),
   };
