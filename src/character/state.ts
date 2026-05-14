@@ -1,16 +1,17 @@
 import type { CharacterPayload, ClothingWorn, RightArmState } from "@/types";
 import { resolveBodyShape } from "@/character/body";
 import {
-  SLOTS,
   findItem,
   hairMaskProfile,
   hasFile,
   itemTags,
+  slotsWithRuntime,
   type ClothingItem,
   type SlotCn,
   type SlotDef,
 } from "@/character/render-catalog";
 import { findMaterialColor } from "@/character/material";
+import { runtimeClothingImage } from "@/runtime-assets";
 
 export type MaskTarget =
   | "head"
@@ -81,7 +82,10 @@ function plainMaskSrc(
   item: ClothingItem,
   stem = "mask",
 ): string | undefined {
-  return hasFile(item, stem) ? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png` : undefined;
+  if (!hasFile(item, stem)) return undefined;
+  return (
+    runtimeClothingImage(item, stem) ?? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png`
+  );
 }
 
 function normalizeClothingColorValue(value: string): string {
@@ -136,7 +140,7 @@ function buildResolvedClothing(
   payload: CharacterPayload,
 ): Partial<Record<SlotCn, ResolvedClothing>> {
   const clothing: Partial<Record<SlotCn, ResolvedClothing>> = {};
-  for (const slot of SLOTS) {
+  for (const slot of slotsWithRuntime()) {
     const worn = wornForSlot(payload, slot.cn);
     if (!worn) continue;
     const item = findItem(slot.data, worn.名称);
@@ -252,7 +256,6 @@ function buildFittedMasks(
   payload: CharacterPayload,
   baseUrl: string,
   clothing: Partial<Record<SlotCn, ResolvedClothing>>,
-  bellyMasks: BellyMasks,
 ): Partial<Record<SlotCn, FittedMasks>> {
   const bodyShape = resolveBodyShape(payload.身形);
   const belly = payload.孕肚 ?? 0;
@@ -344,7 +347,7 @@ export function resolveCharacterState(payload: CharacterPayload, baseUrl: string
   const clothing = buildResolvedClothing(payload);
   resolveClothingRules(clothing);
   const bellyMasks = buildBellyMasks(payload, baseUrl, clothing);
-  const fittedMasks = buildFittedMasks(payload, baseUrl, clothing, bellyMasks);
+  const fittedMasks = buildFittedMasks(payload, baseUrl, clothing);
 
   const state: Omit<ResolvedState, "masksFor"> = {
     payload,

@@ -1,6 +1,14 @@
 export { DolCanvas } from "@/dol-canvas";
 export { buildLayers } from "@/character/builder";
 export { getClothingBranchHints } from "@/character/clothing";
+export {
+  clearRuntimeAssets,
+  getRuntimeAssetRegistry,
+  registerClothingItem,
+  registerTransformation,
+  unregisterClothingItem,
+  unregisterTransformation,
+} from "@/runtime-assets";
 export { payloadOptionsSchema, resolvePayloadOptions } from "@/data/options";
 export {
   colorsData,
@@ -12,4 +20,5 @@ export {
 } from "@/data/generated";
 export type { RenderError } from "@/renderer/canvas";
 export type * from "@/data/options";
+export type * from "@/runtime-assets";
 export type * from "@/types";

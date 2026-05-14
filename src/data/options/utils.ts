@@ -33,7 +33,7 @@ export function sortedByPinyin(options: PayloadListItem[]): PayloadListItem[] {
 
 export function entriesToOptions(
   entries: Record<string, { en?: string }>,
-  sort = sortedByPinyin,
+  sort = (options: PayloadListItem[]) => options,
 ): PayloadListItem[] {
   return sort(
     Object.entries(entries).map(([value, meta]) => ({
@@ -61,12 +61,10 @@ export function rawValuesToOptions(
   values: readonly string[],
   labels?: Record<string, string>,
 ): PayloadListItem[] {
-  return sortedByPinyin(
-    [...new Set(values)].map((value) => ({
-      value,
-      label: labels?.[value] ?? value,
-    })),
-  );
+  return [...new Set(values)].map((value) => ({
+    value,
+    label: labels?.[value] ?? value,
+  }));
 }
 
 export function booleanOption(

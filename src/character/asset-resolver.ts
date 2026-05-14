@@ -1,6 +1,7 @@
 import type { ClothingWorn } from "@/types";
 import type { ResolvedClothing, ResolvedState } from "@/character/state";
 import { files, hasFile, type ClothingItem, type SlotCn } from "@/character/render-catalog";
+import { runtimeClothingImage } from "@/runtime-assets";
 
 function firstAvailable(item: ClothingItem, stems: Array<string | undefined>): string | undefined {
   return stems.find((stem): stem is string => !!stem && hasFile(item, stem));
@@ -77,6 +78,15 @@ export function mainStem(resolved: ResolvedClothing): string | undefined {
     [...all].find((file) => file.startsWith(`${state}-`) && !file.endsWith("-acc")),
     item.states[0],
     [...all].find((file) => file.startsWith("full-") && !file.endsWith("-acc")),
+    [...all].find(
+      (file) =>
+        !file.startsWith("acc") &&
+        !file.startsWith("back") &&
+        !file.startsWith("mask") &&
+        !file.startsWith("left-") &&
+        !file.startsWith("right-") &&
+        file !== "penis",
+    ),
   ]);
 }
 
@@ -260,7 +270,7 @@ export function clothingMaskSrc(
   const integrity = integrityFile(worn, item);
   const base = `${state.baseUrl}clothes/${slotDir}/${item.name}/`;
   const stem = firstAvailable(item, [`mask-${integrity}`, "mask"]);
-  return stem ? `${base}${stem}.png` : undefined;
+  return stem ? (runtimeClothingImage(item, stem) ?? `${base}${stem}.png`) : undefined;
 }
 
 export function availableStem(

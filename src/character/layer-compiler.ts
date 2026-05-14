@@ -2,6 +2,7 @@ import type { ColorFilter, LayerSpec } from "@/types";
 import { Z } from "@/data/zindex";
 import { BREATH, type ClothingItem, type SlotCn } from "@/character/render-catalog";
 import type { ResolvedState } from "@/character/state";
+import { runtimeClothingImageFromBase } from "@/runtime-assets";
 
 export function pushLayer(
   layers: LayerSpec[],
@@ -10,10 +11,21 @@ export function pushLayer(
   stem: string | undefined,
   z: number,
   filter?: ColorFilter,
-  extra?: Pick<LayerSpec, "maskSrcs" | "dx" | "dy" | "alpha">,
+  extra?: Pick<LayerSpec, "maskSrcs" | "dx" | "dy" | "alpha"> & {
+    srcForStem?: (stem: string) => string | undefined;
+  },
 ): void {
   if (!stem) return;
-  layers.push({ id, src: `${imgBase}${stem}.png`, z, filter, animation: BREATH, ...extra });
+  const { srcForStem, ...layerExtra } = extra ?? {};
+  layers.push({
+    id,
+    src:
+      srcForStem?.(stem) ?? runtimeClothingImageFromBase(imgBase, stem) ?? `${imgBase}${stem}.png`,
+    z,
+    filter,
+    animation: BREATH,
+    ...layerExtra,
+  });
 }
 
 export function zFor(item: ClothingItem, fallback: number): number {

@@ -4,6 +4,7 @@ import { Z } from "@/data/zindex";
 import { transformationsData } from "@/data/generated";
 import { transformationFilterRules } from "@/character/render-catalog";
 import { materialFilter } from "@/character/material";
+import { runtimeTransformationImage, runtimeTransformations } from "@/runtime-assets";
 
 type TransformEntry = {
   cnName: string;
@@ -153,7 +154,7 @@ function prefixedVariant(
 function findTransform(name?: string): [string, TransformEntry] | undefined {
   if (!name) return undefined;
   const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
-  const entry = Object.entries(transforms).find(
+  const entry = Object.entries({ ...transforms, ...runtimeTransformations() }).find(
     ([key, v]) => v.cnName === name || key === name || v.cnName === normalizedName,
   );
   return entry;
@@ -197,7 +198,9 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
   ): void {
     layers.push({
       id: `transform-${partKey}-${variant}${extra?.idSuffix ?? ""}`,
-      src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
+      src:
+        runtimeTransformationImage(transform, partKey, variant) ??
+        `${b}transformations/${dirName}/${partKey}/${variant}.png`,
       z,
       filter: filterForPart(dirName, partKey, payload),
       animation: BREATH,

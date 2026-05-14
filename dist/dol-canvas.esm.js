@@ -631,6 +631,198 @@ function buildHairLayers(state) {
     return layers;
 }
 var render_rules_namespaceObject = JSON.parse('{"GC":{"upper":{"schoolblouse":["school_blouse"],"serafuku":["serafuku_upper"],"dressshirt":["dress_shirt"]},"lower":{"pinafore":["pinafore"],"plaid pinafore":["pinafore"]},"neck":{"serafuku ribbon":["serafuku_neckwear"]}},"hT":{"curly pigtails":"ponytail","fluffy ponytail":"ponytail","thick sidetail":"ponytail","thick twintails":"ponytail","ribbon tail":"ponytail","thick ponytail":"ponytail","half-up":"ponytail","scorpion tails":"ponytail","thick pigtails":"ponytail"},"XK":{"demon":{"fixed":{"parts":["wings-idle","tail-idle","horns"],"filter":{"blend":"hsl(275, 100%, 30%)","blendMode":"hard-light","brightness":0,"desaturate":false}}},"cat":{"inheritHair":["ears","tail-idle","cheeks"]},"wolf":{"inheritHair":["ears","tail-idle","cheeks"]},"fox":{"inheritHair":["ears","tail-idle","cheeks"]},"bird":{"inheritHair":["wings-idle","tail-idle","feathers"]}}}');
+const runtime_assets_clothing = new Map();
+const transformations = new Map();
+const clothingIds = new WeakMap();
+const clothingById = new Map();
+const RUNTIME_CLOTHING_BASE = "runtime-clothing:";
+function boolNumber(value) {
+    return value ? 1 : 0;
+}
+function imageKeys(images) {
+    return Object.keys(images).filter((key)=>images[key]);
+}
+function normalizeStates(options, images) {
+    const configured = options.states?.length ? [
+        ...options.states
+    ] : [
+        "full",
+        "torn",
+        "tattered",
+        "frayed"
+    ];
+    const keys = imageKeys(images);
+    const present = configured.filter((state)=>keys.some((key)=>key === state || key.startsWith(`${state}-`)));
+    return present.length ? present : configured;
+}
+function breastSetting(value) {
+    if (true === value) return 1;
+    if (Array.isArray(value)) return Object.fromEntries(value.map((size)=>[
+            String(size),
+            size
+        ]));
+    if (value && "object" == typeof value) return Object.fromEntries(Object.entries(value).map(([key, mapped])=>[
+            String(key),
+            mapped
+        ]));
+    return 0;
+}
+function normalizeClothingItem(options, images) {
+    const allFiles = imageKeys(images);
+    const armVariants = allFiles.filter((file)=>/^(left|right)-(idle|cover|hold)/.test(file));
+    const states = normalizeStates(options, images);
+    const accessory = boolNumber(options.accessory);
+    return {
+        name: options.name,
+        cnName: options.cnName,
+        colorOptions: [
+            ...options.colorOptions ?? []
+        ],
+        accColorOptions: [
+            ...options.accColorOptions ?? []
+        ],
+        patternOptions: [
+            ...options.patternOptions ?? []
+        ],
+        patternLayer: options.patternLayer ?? "",
+        states,
+        numeric: allFiles.filter((file)=>/^\d+$/.test(file)).sort((a, b)=>a - b),
+        armVariants,
+        allFiles,
+        hasAcc: accessory > 0,
+        accessory,
+        accessoryIntegrityImg: true === options.accessoryIntegrityImg,
+        mainImage: false === options.mainImage ? 0 : 1,
+        accImage: false === options.accImage ? 0 : 1,
+        leftImage: false === options.leftImage ? 0 : 1,
+        rightImage: false === options.rightImage ? 0 : 1,
+        coverImage: false === options.coverImage ? 0 : 1,
+        sleeveImg: true === options.sleeveImg,
+        sleeveAccImg: true === options.sleeveAccImg,
+        sleeveColour: "primary" === options.sleeveColour ? "" : options.sleeveColour ?? "",
+        breastImg: breastSetting(options.breastImg),
+        breastAccImg: breastSetting(options.breastAccImg),
+        breastPattern: true === options.breastPattern,
+        backImg: boolNumber(options.backImg),
+        backImgAcc: boolNumber(options.backImgAcc),
+        backImgColour: "primary" === options.backImgColour ? "" : options.backImgColour ?? "",
+        backImgAccColour: "primary" === options.backImgAccColour ? "" : options.backImgAccColour ?? "",
+        backIntegrityImg: true === options.backIntegrityImg,
+        maskImg: boolNumber(options.maskImg),
+        altposition: options.altposition ?? "",
+        altdisabled: [
+            ...options.altdisabled ?? []
+        ],
+        hood: boolNumber(options.hood),
+        hoodposition: options.hoodposition ?? "",
+        outfitPrimaryHead: false,
+        outfitSecondary: false,
+        pregType: options.pregType ?? 0,
+        formfitting: boolNumber(options.formfitting),
+        notuck: boolNumber(options.notuck),
+        onePiece: boolNumber(options.onePiece),
+        hasCollar: boolNumber(options.hasCollar),
+        penisImg: boolNumber(options.penisImg),
+        penisAccImg: boolNumber(options.penisAccImg),
+        branchHints: {
+            替代: !!options.altposition,
+            兜帽: !!options.hood || !!options.hoodposition,
+            卷袖: allFiles.some((file)=>file.endsWith("-rolled")),
+            阴茎凸起自动: !!options.penisImg || !!options.penisAccImg,
+            领口变体自动: allFiles.some((file)=>file.includes("-nocollar") || file.includes("-serafuku")),
+            背面层: !!options.backImg || !!options.backImgAcc,
+            遮罩: !!options.maskImg,
+            孕肚适配: !!options.pregType || allFiles.some((file)=>/(?:preg|belly|shadow)/.test(file))
+        },
+        detail: boolNumber(options.detail),
+        zIndex: null == options.zIndex ? "" : String(options.zIndex)
+    };
+}
+function registerClothingItem(type, options, images) {
+    const normalizedImages = images;
+    const item = normalizeClothingItem(options, normalizedImages);
+    const list = runtime_assets_clothing.get(type) ?? [];
+    if (list.some((entry)=>entry.item.name === item.name || entry.item.cnName === item.cnName)) throw new Error(`Runtime clothing already registered: ${type}/${item.cnName}`);
+    const entry = {
+        item,
+        images: normalizedImages
+    };
+    const id = `${type}/${item.name}`;
+    clothingIds.set(item, id);
+    clothingById.set(id, entry);
+    runtime_assets_clothing.set(type, [
+        ...list,
+        entry
+    ]);
+}
+function unregisterClothingItem(type, nameOrCnName) {
+    const list = runtime_assets_clothing.get(type);
+    if (!list) return false;
+    const next = list.filter((entry)=>entry.item.name !== nameOrCnName && entry.item.cnName !== nameOrCnName);
+    for (const entry of list)if (entry.item.name === nameOrCnName || entry.item.cnName === nameOrCnName) {
+        const id = clothingIds.get(entry.item);
+        if (id) clothingById.delete(id);
+    }
+    runtime_assets_clothing.set(type, next);
+    return next.length !== list.length;
+}
+function runtimeClothingItems(type) {
+    return runtime_assets_clothing.get(type)?.map((entry)=>entry.item) ?? [];
+}
+function runtimeClothingImage(item, stem) {
+    const id = clothingIds.get(item);
+    return id ? clothingById.get(id)?.images[stem] : void 0;
+}
+function runtimeClothingBase(item) {
+    const id = clothingIds.get(item);
+    return id ? `${RUNTIME_CLOTHING_BASE}${id}/` : void 0;
+}
+function runtimeClothingImageFromBase(base, stem) {
+    if (!base.startsWith(RUNTIME_CLOTHING_BASE)) return;
+    const id = base.slice(RUNTIME_CLOTHING_BASE.length).replace(/\/$/, "");
+    return clothingById.get(id)?.images[stem];
+}
+function registerTransformation(type, options, images) {
+    if (transformations.has(type)) throw new Error(`Runtime transformation already registered: ${type}`);
+    transformations.set(type, {
+        cnName: options.cnName,
+        label: options.label,
+        parts: Object.fromEntries(Object.entries(options.parts).map(([part, variants])=>[
+                part,
+                [
+                    ...variants ?? []
+                ]
+            ])),
+        partLabels: options.partLabels,
+        variantLabels: options.variantLabels,
+        images: images
+    });
+}
+function unregisterTransformation(type) {
+    return transformations.delete(type);
+}
+function runtimeTransformations() {
+    return Object.fromEntries(transformations.entries());
+}
+function runtimeTransformationImage(transform, part, variant) {
+    for (const entry of transformations.values())if (entry === transform) return entry.images[`${part}/${variant}`];
+}
+function clearRuntimeAssets() {
+    runtime_assets_clothing.clear();
+    clothingById.clear();
+    transformations.clear();
+}
+function getRuntimeAssetRegistry() {
+    return {
+        clothing: Object.fromEntries([
+            ...runtime_assets_clothing.entries()
+        ].map(([slot, entries])=>[
+                slot,
+                entries.map((entry)=>entry.item)
+            ])),
+        transformations: runtimeTransformations()
+    };
+}
 const render_catalog_BREATH = "playerBreath";
 const SLOTS = [
     {
@@ -706,10 +898,19 @@ const SLOTS = [
         data: clothes_namespaceObject.genitals
     }
 ];
+function slotsWithRuntime() {
+    return SLOTS.map((slot)=>({
+            ...slot,
+            data: [
+                ...slot.data,
+                ...runtimeClothingItems(slot.cn)
+            ]
+        }));
+}
 const clothingTags = render_rules_namespaceObject.GC;
 const clothFilter = (colorName)=>materialFilter("cloth", colorName);
 function findItem(data, cnName) {
-    return data.find((item)=>item.cnName === cnName);
+    return data.find((item)=>item.cnName === cnName || item.name === cnName);
 }
 function itemTags(slotDir, item) {
     const tags = new Set(clothingTags[slotDir]?.[item.name] ?? []);
@@ -788,7 +989,10 @@ function mainStem(resolved) {
         item.states[0],
         [
             ...all
-        ].find((file)=>file.startsWith("full-") && !file.endsWith("-acc"))
+        ].find((file)=>file.startsWith("full-") && !file.endsWith("-acc")),
+        [
+            ...all
+        ].find((file)=>!file.startsWith("acc") && !file.startsWith("back") && !file.startsWith("mask") && !file.startsWith("left-") && !file.startsWith("right-") && "penis" !== file)
     ]);
 }
 function accessoryStem(worn, item) {
@@ -908,7 +1112,7 @@ function clothingMaskSrc(state, slotDir, item, worn) {
         `mask-${integrity}`,
         "mask"
     ]);
-    return stem ? `${base}${stem}.png` : void 0;
+    return stem ? runtimeClothingImage(item, stem) ?? `${base}${stem}.png` : void 0;
 }
 function availableStem(item, stems) {
     return firstAvailable(item, stems);
@@ -918,13 +1122,14 @@ function slotAccessoryStem(slotCn, resolved) {
 }
 function pushLayer(layers, id, imgBase, stem, z, filter, extra) {
     if (!stem) return;
+    const { srcForStem, ...layerExtra } = extra ?? {};
     layers.push({
         id,
-        src: `${imgBase}${stem}.png`,
+        src: srcForStem?.(stem) ?? runtimeClothingImageFromBase(imgBase, stem) ?? `${imgBase}${stem}.png`,
         z,
         filter,
         animation: render_catalog_BREATH,
-        ...extra
+        ...layerExtra
     });
 }
 function zFor(item, fallback) {
@@ -1024,7 +1229,7 @@ function withBrightness(filter, brightness) {
 }
 function createRenderContext(state, resolved) {
     const { slot, worn, item } = resolved;
-    const imgBase = `${state.baseUrl}clothes/${slot.dir}/${item.name}/`;
+    const imgBase = runtimeClothingBase(item) ?? `${state.baseUrl}clothes/${slot.dir}/${item.name}/`;
     return {
         state,
         resolved,
@@ -1322,14 +1527,14 @@ function buildResolvedClothingLayers(state, resolved) {
 function buildClothingLayers(state) {
     if (!state.payload.衣物) return [];
     const layers = [];
-    for (const slotDef of SLOTS){
+    for (const slotDef of slotsWithRuntime()){
         const resolved = state.clothing[slotDef.cn];
         if (resolved) layers.push(...buildResolvedClothingLayers(state, resolved));
     }
     return layers;
 }
 function getClothingBranchHints(slotCn, name) {
-    const slot = SLOTS.find((candidate)=>candidate.cn === slotCn);
+    const slot = slotsWithRuntime().find((candidate)=>candidate.cn === slotCn);
     const item = slot?.data.find((candidate)=>candidate.cnName === name || candidate.name === name);
     return item?.branchHints;
 }
@@ -1413,7 +1618,10 @@ function prefixedVariant(available, prefix, hint) {
 function findTransform(name) {
     if (!name) return;
     const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
-    const entry = Object.entries(transforms).find(([key, v])=>v.cnName === name || key === name || v.cnName === normalizedName);
+    const entry = Object.entries({
+        ...transforms,
+        ...runtimeTransformations()
+    }).find(([key, v])=>v.cnName === name || key === name || v.cnName === normalizedName);
     return entry;
 }
 function buildTransformLayers(state) {
@@ -1442,7 +1650,7 @@ function buildTransformLayers(state) {
     function pushTransformLayer(partKey, variant, z, extra) {
         layers.push({
             id: `transform-${partKey}-${variant}${extra?.idSuffix ?? ""}`,
-            src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
+            src: runtimeTransformationImage(transform, partKey, variant) ?? `${b}transformations/${dirName}/${partKey}/${variant}.png`,
             z,
             filter: filterForPart(dirName, partKey, payload),
             animation: transformation_BREATH,
@@ -1564,7 +1772,8 @@ function wornForSlot(payload, slotCn) {
     return payload.衣物?.[slotCn] ?? void 0;
 }
 function plainMaskSrc(baseUrl, slotDir, item, stem = "mask") {
-    return hasFile(item, stem) ? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png` : void 0;
+    if (!hasFile(item, stem)) return;
+    return runtimeClothingImage(item, stem) ?? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png`;
 }
 function normalizeClothingColorValue(value) {
     return findMaterialColor("cloth", value)?.cnName ?? value;
@@ -1596,7 +1805,7 @@ function normalizeClothingWorn(worn, item) {
 }
 function buildResolvedClothing(payload) {
     const clothing = {};
-    for (const slot of SLOTS){
+    for (const slot of slotsWithRuntime()){
         const worn = wornForSlot(payload, slot.cn);
         if (!worn) continue;
         const item = findItem(slot.data, worn.名称);
@@ -1677,7 +1886,7 @@ function buildBellyMasks(payload, baseUrl, clothing) {
         hidesUnderLower: Boolean(underLowerClip && underUpper)
     };
 }
-function buildFittedMasks(payload, baseUrl, clothing, bellyMasks) {
+function buildFittedMasks(payload, baseUrl, clothing) {
     const bodyShape = resolveBodyShape(payload.身形);
     const belly = payload.孕肚 ?? 0;
     const noPregBellyFit = !between(belly, 8, 24);
@@ -1763,7 +1972,7 @@ function resolveCharacterState(payload, baseUrl) {
     const clothing = buildResolvedClothing(payload);
     resolveClothingRules(clothing);
     const bellyMasks = buildBellyMasks(payload, baseUrl, clothing);
-    const fittedMasks = buildFittedMasks(payload, baseUrl, clothing, bellyMasks);
+    const fittedMasks = buildFittedMasks(payload, baseUrl, clothing);
     const state = {
         payload,
         baseUrl,
@@ -2464,7 +2673,7 @@ function sortedByPinyin(options) {
         ...options
     ].sort(byPinyin);
 }
-function entriesToOptions(entries, sort = sortedByPinyin) {
+function entriesToOptions(entries, sort = (options)=>options) {
     return sort(Object.entries(entries).map(([value, meta])=>({
             value,
             label: value,
@@ -2482,12 +2691,12 @@ function colorsToOptions(entries) {
         })));
 }
 function rawValuesToOptions(values, labels) {
-    return sortedByPinyin([
+    return [
         ...new Set(values)
     ].map((value)=>({
             value,
             label: labels?.[value] ?? value
-        })));
+        }));
 }
 function booleanOption(key, label, category, enabled) {
     return {
@@ -2581,11 +2790,17 @@ function defaultFirst(options) {
     ].sort((a, b)=>{
         if ("default" === a.value) return -1;
         if ("default" === b.value) return 1;
-        return byPinyin(a, b);
+        return 0;
     });
 }
 function hasPenis(ctx) {
     return true === ctx.payload.阴茎;
+}
+function hasGroupedHairColor(ctx) {
+    return "整体" === ctx.payload.发色模式 || "拆分" === ctx.payload.发色模式;
+}
+function hasSplitHairColor(ctx) {
+    return "拆分" === ctx.payload.发色模式;
 }
 function selectedTransformName(payload) {
     return "object" == typeof payload.转化 ? payload.转化.类型 : payload.转化;
@@ -2594,10 +2809,16 @@ function selectedTransform(ctx) {
     const name = selectedTransformName(ctx.payload);
     if (!name) return;
     const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
-    return Object.entries(TRANSFORMS).find(([key, transform])=>key === name || transform.cnName === name || transform.cnName === normalizedName);
+    return Object.entries({
+        ...TRANSFORMS,
+        ...runtimeTransformations()
+    }).find(([key, transform])=>key === name || transform.cnName === name || transform.cnName === normalizedName);
 }
 function transformTypeOptions() {
-    const options = Object.entries(TRANSFORMS).map(([key, transform])=>({
+    const options = Object.entries({
+        ...TRANSFORMS,
+        ...runtimeTransformations()
+    }).map(([key, transform])=>({
             value: transform.cnName,
             label: transform.cnName,
             meta: {
@@ -2689,11 +2910,11 @@ function selectedClothing(payload, slot) {
 function selectedClothingItem(ctx, slot) {
     const worn = selectedClothing(ctx.payload, slot);
     if (!worn) return;
-    const slotDef = SLOTS.find((candidate)=>candidate.cn === slot);
+    const slotDef = slotsWithRuntime().find((candidate)=>candidate.cn === slot);
     return slotDef?.data.find((item)=>item.cnName === worn.名称 || item.name === worn.名称);
 }
 function clothingNameOptions(slot) {
-    const slotDef = SLOTS.find((candidate)=>candidate.cn === slot);
+    const slotDef = slotsWithRuntime().find((candidate)=>candidate.cn === slot);
     return sortedByPinyin((slotDef?.data ?? []).map((item)=>({
             value: item.cnName,
             label: item.cnName,
@@ -2844,12 +3065,12 @@ function hairOptions() {
             "整体",
             "拆分"
         ])),
-        listOption("发色详情.头发.分色模式", "头发分色模式", "hair", entriesToOptions(HAIR_COLOR_STYLES)),
-        listOption("发色详情.头发.发色", "头发发色", "hair", hairColors),
-        listOption("发色详情.头发.第二发色", "头发第二发色", "hair", hairColors),
-        listOption("发色详情.刘海.分色模式", "刘海分色模式", "hair", entriesToOptions(HAIR_COLOR_STYLES)),
-        listOption("发色详情.刘海.发色", "刘海发色", "hair", hairColors),
-        listOption("发色详情.刘海.第二发色", "刘海第二发色", "hair", hairColors)
+        listOption("发色详情.头发.分色模式", "头发分色模式", "hair", entriesToOptions(HAIR_COLOR_STYLES), hasGroupedHairColor),
+        listOption("发色详情.头发.发色", "头发发色", "hair", hairColors, hasGroupedHairColor),
+        listOption("发色详情.头发.第二发色", "头发第二发色", "hair", hairColors, hasGroupedHairColor),
+        listOption("发色详情.刘海.分色模式", "刘海分色模式", "hair", entriesToOptions(HAIR_COLOR_STYLES), hasSplitHairColor),
+        listOption("发色详情.刘海.发色", "刘海发色", "hair", hairColors, hasSplitHairColor),
+        listOption("发色详情.刘海.第二发色", "刘海第二发色", "hair", hairColors, hasSplitHairColor)
     ];
 }
 function faceOptions() {
@@ -2863,17 +3084,15 @@ function faceOptions() {
         booleanOption("眼睛.半睁眼", "半睁眼", "face"),
         booleanOption("眼睛.血丝眼", "血丝眼", "face"),
         numberOption("眼睛.流泪程度", "眼睛流泪程度", "face", 0, 5),
-        numberOption("脸红", "脸红", "face", 0, 5),
-        numberOption("脸红程度", "脸红程度", "face", 0, 5),
-        numberOption("泪水", "泪水", "face", 0, 4)
+        numberOption("脸红程度", "脸红程度", "face", 0, 5)
     ];
 }
 function clothingOptions() {
-    return SLOTS.flatMap((slot)=>{
+    return slotsWithRuntime().flatMap((slot)=>{
         const slotCn = slot.cn;
         const prefix = `衣物.${slotCn}`;
         return [
-            listOption(`${prefix}.名称`, `${slotCn}名称`, "clothing", clothingNameOptions(slotCn)),
+            listOption(`${prefix}.名称`, `${slotCn}名称`, "clothing", ()=>clothingNameOptions(slotCn)),
             listOption(`${prefix}.主色调`, `${slotCn}主色调`, "clothing", clothingColorOptions(slotCn, "colorOptions"), hasMultipleClothingColorOptions(slotCn, "colorOptions")),
             listOption(`${prefix}.第二色调`, `${slotCn}第二色调`, "clothing", clothingColorOptions(slotCn, "accColorOptions"), hasMultipleClothingColorOptions(slotCn, "accColorOptions")),
             listOption(`${prefix}.图案`, `${slotCn}图案`, "clothing", clothingPatternOptions(slotCn), hasClothingOptions(slotCn, "patternOptions")),
@@ -2892,7 +3111,7 @@ function clothingOptions() {
 function transformationOptions() {
     const detailOption = (field, label)=>listOption(`转化.细节.${field}`, `转化${label}`, "transformation", transformPartOptions(field), hasMultipleTransformPartOptions(field));
     return [
-        listOption("转化", "转化", "transformation", transformTypeOptions()),
+        listOption("转化", "转化", "transformation", transformTypeOptions),
         detailOption("翅膀", "翅膀"),
         listOption("转化.细节.翅膀状态", "转化翅膀状态", "transformation", transformStateOptions("wings"), hasGlobalWingState),
         listOption("转化.细节.左翅膀状态", "转化左翅膀状态", "transformation", valuesToOptions(TRANSFORM_SIDE_STATES), hasSideWingState),
@@ -2959,4 +3178,4 @@ function resolvePayloadOptions(payload = {}) {
     }
     return resolved;
 }
-export { DolCanvas, buildLayers, clothes_namespaceObject as clothesData, colors_namespaceObject as colorsData, face_namespaceObject as faceData, getClothingBranchHints, hair_namespaceObject as hairData, i18n_namespaceObject as i18nData, payloadOptionsSchema, resolvePayloadOptions, transformations_namespaceObject as transformationsData };
+export { DolCanvas, buildLayers, clearRuntimeAssets, clothes_namespaceObject as clothesData, colors_namespaceObject as colorsData, face_namespaceObject as faceData, getClothingBranchHints, getRuntimeAssetRegistry, hair_namespaceObject as hairData, i18n_namespaceObject as i18nData, payloadOptionsSchema, registerClothingItem, registerTransformation, resolvePayloadOptions, transformations_namespaceObject as transformationsData, unregisterClothingItem, unregisterTransformation };

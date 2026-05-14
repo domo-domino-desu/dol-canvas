@@ -3,6 +3,7 @@ import { Z } from "@/data/zindex";
 import { clothesData } from "@/data/generated";
 import renderRules from "@/data/overrides/render-rules.json";
 import { materialFilter } from "@/character/material";
+import { runtimeClothingItems } from "@/runtime-assets";
 
 export type BreastMap = Record<string, number | null>;
 
@@ -100,16 +101,23 @@ export const SLOTS: SlotDef[] = [
   { cn: "私部装备", z: Z.GENITALS, dir: "genitals", data: (clothesData as ClothesJson).genitals },
 ];
 
+export function slotsWithRuntime(): SlotDef[] {
+  return SLOTS.map((slot) => ({
+    ...slot,
+    data: [...slot.data, ...runtimeClothingItems(slot.cn)],
+  }));
+}
+
 const clothingTags = renderRules.clothingTags as Record<string, Record<string, string[]>>;
 
 export const clothFilter = (colorName?: string) => materialFilter("cloth", colorName);
 
 export function findItem(data: ClothingItem[], cnName: string): ClothingItem | undefined {
-  return data.find((item) => item.cnName === cnName);
+  return data.find((item) => item.cnName === cnName || item.name === cnName);
 }
 
 export function slotForCn(slotCn: SlotCn): SlotDef {
-  return SLOTS.find((slot) => slot.cn === slotCn)!;
+  return slotsWithRuntime().find((slot) => slot.cn === slotCn)!;
 }
 
 export function itemTags(slotDir: string, item: ClothingItem): Set<string> {

@@ -1,6 +1,12 @@
 import type { CharacterPayload, ClothingWorn } from "@/types";
 import { colorsData, faceData, hairData, i18nData, transformationsData } from "@/data/generated";
-import { SLOTS, type BreastMap, type ClothingItem, type SlotCn } from "@/character/render-catalog";
+import {
+  slotsWithRuntime,
+  type BreastMap,
+  type ClothingItem,
+  type SlotCn,
+} from "@/character/render-catalog";
+import { runtimeTransformations } from "@/runtime-assets";
 import type {
   ColorEntry,
   PayloadListItem,
@@ -69,12 +75,20 @@ function defaultFirst(options: PayloadListItem[]): PayloadListItem[] {
   return [...options].sort((a, b) => {
     if (a.value === "default") return -1;
     if (b.value === "default") return 1;
-    return byPinyin(a, b);
+    return 0;
   });
 }
 
 function hasPenis(ctx: PayloadOptionContext): boolean {
   return ctx.payload.阴茎 === true;
+}
+
+function hasGroupedHairColor(ctx: PayloadOptionContext): boolean {
+  return ctx.payload.发色模式 === "整体" || ctx.payload.发色模式 === "拆分";
+}
+
+function hasSplitHairColor(ctx: PayloadOptionContext): boolean {
+  return ctx.payload.发色模式 === "拆分";
 }
 
 function selectedTransformName(payload: CharacterPayload): string | undefined {
@@ -85,21 +99,23 @@ function selectedTransform(ctx: PayloadOptionContext): [string, TransformEntry] 
   const name = selectedTransformName(ctx.payload);
   if (!name) return undefined;
   const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
-  return Object.entries(TRANSFORMS).find(
+  return Object.entries({ ...TRANSFORMS, ...runtimeTransformations() }).find(
     ([key, transform]) =>
       key === name || transform.cnName === name || transform.cnName === normalizedName,
   );
 }
 
 function transformTypeOptions(): PayloadListItem[] {
-  const options = Object.entries(TRANSFORMS).map(([key, transform]) => ({
-    value: transform.cnName,
-    label: transform.cnName,
-    meta: {
-      key,
-      label: transform.label,
-    },
-  }));
+  const options = Object.entries({ ...TRANSFORMS, ...runtimeTransformations() }).map(
+    ([key, transform]) => ({
+      value: transform.cnName,
+      label: transform.cnName,
+      meta: {
+        key,
+        label: transform.label,
+      },
+    }),
+  );
   return options.sort((a, b) => {
     const aOrder = TRANSFORM_ORDER.indexOf(a.value);
     const bOrder = TRANSFORM_ORDER.indexOf(b.value);
@@ -213,12 +229,12 @@ function selectedClothing(payload: CharacterPayload, slot: SlotCn): ClothingWorn
 function selectedClothingItem(ctx: PayloadOptionContext, slot: SlotCn): ClothingItem | undefined {
   const worn = selectedClothing(ctx.payload, slot);
   if (!worn) return undefined;
-  const slotDef = SLOTS.find((candidate) => candidate.cn === slot);
+  const slotDef = slotsWithRuntime().find((candidate) => candidate.cn === slot);
   return slotDef?.data.find((item) => item.cnName === worn.名称 || item.name === worn.名称);
 }
 
 function clothingNameOptions(slot: SlotCn): PayloadListItem[] {
-  const slotDef = SLOTS.find((candidate) => candidate.cn === slot);
+  const slotDef = slotsWithRuntime().find((candidate) => candidate.cn === slot);
   return sortedByPinyin(
     (slotDef?.data ?? []).map((item) => ({
       value: item.cnName,
@@ -394,17 +410,19 @@ function hairOptions(): PayloadOption[] {
       "头发分色模式",
       "hair",
       entriesToOptions(HAIR_COLOR_STYLES),
+      hasGroupedHairColor,
     ),
-    listOption("发色详情.头发.发色", "头发发色", "hair", hairColors),
-    listOption("发色详情.头发.第二发色", "头发第二发色", "hair", hairColors),
+    listOption("发色详情.头发.发色", "头发发色", "hair", hairColors, hasGroupedHairColor),
+    listOption("发色详情.头发.第二发色", "头发第二发色", "hair", hairColors, hasGroupedHairColor),
     listOption(
       "发色详情.刘海.分色模式",
       "刘海分色模式",
       "hair",
       entriesToOptions(HAIR_COLOR_STYLES),
+      hasSplitHairColor,
     ),
-    listOption("发色详情.刘海.发色", "刘海发色", "hair", hairColors),
-    listOption("发色详情.刘海.第二发色", "刘海第二发色", "hair", hairColors),
+    listOption("发色详情.刘海.发色", "刘海发色", "hair", hairColors, hasSplitHairColor),
+    listOption("发色详情.刘海.第二发色", "刘海第二发色", "hair", hairColors, hasSplitHairColor),
   ];
 }
 
@@ -429,18 +447,16 @@ function faceOptions(): PayloadOption[] {
     booleanOption("眼睛.半睁眼", "半睁眼", "face"),
     booleanOption("眼睛.血丝眼", "血丝眼", "face"),
     numberOption("眼睛.流泪程度", "眼睛流泪程度", "face", 0, 5),
-    numberOption("脸红", "脸红", "face", 0, 5),
     numberOption("脸红程度", "脸红程度", "face", 0, 5),
-    numberOption("泪水", "泪水", "face", 0, 4),
   ];
 }
 
 function clothingOptions(): PayloadOption[] {
-  return SLOTS.flatMap((slot) => {
+  return slotsWithRuntime().flatMap((slot) => {
     const slotCn = slot.cn;
     const prefix = `衣物.${slotCn}`;
     return [
-      listOption(`${prefix}.名称`, `${slotCn}名称`, "clothing", clothingNameOptions(slotCn)),
+      listOption(`${prefix}.名称`, `${slotCn}名称`, "clothing", () => clothingNameOptions(slotCn)),
       listOption(
         `${prefix}.主色调`,
         `${slotCn}主色调`,
@@ -508,7 +524,7 @@ function transformationOptions(): PayloadOption[] {
     );
 
   return [
-    listOption("转化", "转化", "transformation", transformTypeOptions()),
+    listOption("转化", "转化", "transformation", transformTypeOptions),
     detailOption("翅膀", "翅膀"),
     listOption(
       "转化.细节.翅膀状态",

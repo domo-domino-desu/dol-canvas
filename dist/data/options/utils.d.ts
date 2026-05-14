@@ -4,7 +4,7 @@ export declare function byPinyin(a: PayloadListItem, b: PayloadListItem): number
 export declare function sortedByPinyin(options: PayloadListItem[]): PayloadListItem[];
 export declare function entriesToOptions(entries: Record<string, {
     en?: string;
-}>, sort?: typeof sortedByPinyin): PayloadListItem[];
+}>, sort?: (options: PayloadListItem[]) => PayloadListItem[]): PayloadListItem[];
 export declare function colorsToOptions(entries: ColorEntry[] | undefined): PayloadListItem[];
 export declare function rawValuesToOptions(values: readonly string[], labels?: Record<string, string>): PayloadListItem[];
 export declare function booleanOption(key: string, label: string, category: PayloadOptionCategory, enabled?: PayloadOption["enabled"]): PayloadBooleanOption;

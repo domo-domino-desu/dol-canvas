@@ -1,7 +1,7 @@
 import type { LayerSpec, ClothingWorn, ColorFilter } from "@/types";
 import { Z, Z_OFFSET } from "@/data/zindex";
 import type { ResolvedClothing, ResolvedState } from "@/character/state";
-import { SLOTS, clothFilter, type ClothingItem } from "@/character/render-catalog";
+import { clothFilter, slotsWithRuntime, type ClothingItem } from "@/character/render-catalog";
 import {
   accessoryStem,
   armAccFileForWorn,
@@ -21,6 +21,7 @@ import {
   slotAccessoryStem,
 } from "@/character/asset-resolver";
 import { pushLayer, sleeveZ, zFor } from "@/character/layer-compiler";
+import { runtimeClothingBase } from "@/runtime-assets";
 
 function bellyClipMask(state: ResolvedState): string | undefined {
   return state.bellyMasks.clip;
@@ -190,7 +191,7 @@ function createRenderContext(
   resolved: ResolvedClothing,
 ): ClothingRenderContext {
   const { slot, worn, item } = resolved;
-  const imgBase = `${state.baseUrl}clothes/${slot.dir}/${item.name}/`;
+  const imgBase = runtimeClothingBase(item) ?? `${state.baseUrl}clothes/${slot.dir}/${item.name}/`;
   return {
     state,
     resolved,
@@ -629,7 +630,7 @@ export function buildClothingLayers(state: ResolvedState): LayerSpec[] {
   if (!state.payload.衣物) return [];
 
   const layers: LayerSpec[] = [];
-  for (const slotDef of SLOTS) {
+  for (const slotDef of slotsWithRuntime()) {
     const resolved = state.clothing[slotDef.cn];
     if (!resolved) continue;
     layers.push(...buildResolvedClothingLayers(state, resolved));
@@ -641,7 +642,7 @@ export function getClothingBranchHints(
   slotCn: string,
   name: string,
 ): Record<string, boolean> | undefined {
-  const slot = SLOTS.find((candidate) => candidate.cn === slotCn);
+  const slot = slotsWithRuntime().find((candidate) => candidate.cn === slotCn);
   const item = slot?.data.find((candidate) => candidate.cnName === name || candidate.name === name);
   return item?.branchHints;
 }

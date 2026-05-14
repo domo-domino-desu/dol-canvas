@@ -57,6 +57,7 @@ export type SlotDef = {
 };
 export declare const BREATH = "playerBreath";
 export declare const SLOTS: SlotDef[];
+export declare function slotsWithRuntime(): SlotDef[];
 export declare const clothFilter: (colorName?: string) => ColorFilter | undefined;
 export declare function findItem(data: ClothingItem[], cnName: string): ClothingItem | undefined;
 export declare function slotForCn(slotCn: SlotCn): SlotDef;
