@@ -5,7 +5,7 @@
 默认资源地址使用 cdn.jsdelivr CDN：
 
 ```text
-https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@0.1.7/img/
+https://cdn.jsdelivr.net/gh/domo-domino-desu/dol-canvas@0.2.0/img/
 ```
 
 ## Vue 使用
@@ -141,3 +141,11 @@ bun run typecheck
 bun run lint
 bun run build
 ```
+
+## LICENSE
+
+使用 Creative Commons 署名—非商业性使用—相同方式共享 4.0 协议。
+
+## Credits
+
+本仓库修改自原始作品 https://gitgud.io/Vrelnir/degrees-of-lewdity/
