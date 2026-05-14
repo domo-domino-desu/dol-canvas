@@ -92,6 +92,7 @@ export interface TransformDetail {
     尾巴状态?: "idle" | "cover" | "flaunt";
     尾巴层级?: "前" | "后";
     角?: string;
+    角层级?: "前" | "后";
     颊羽?: string;
     覆羽?: string;
     阴毛?: string;

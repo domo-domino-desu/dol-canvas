@@ -46,6 +46,32 @@ const TRANSFORM_PART_FIELD: Record<string, string | undefined> = {
   eyes: "眼睛",
   cheeks: "脸颊",
 };
+const TRANSFORM_STATES = ["idle", "cover", "flaunt"] as const;
+const TRANSFORM_SIDE_STATES = ["idle", "cover"] as const;
+const TRANSFORM_PART_STATES = ["default", "hidden", "disabled"] as const;
+const TRANSFORM_PART_STATE_LABELS: Record<string, string> = {
+  default: "默认",
+  hidden: "隐藏",
+  disabled: "关闭",
+};
+
+function valuesToOptions(
+  values: readonly string[],
+  labels?: Record<string, string>,
+): PayloadListItem[] {
+  return [...new Set(values)].map((value) => ({
+    value,
+    label: labels?.[value] ?? value,
+  }));
+}
+
+function defaultFirst(options: PayloadListItem[]): PayloadListItem[] {
+  return [...options].sort((a, b) => {
+    if (a.value === "default") return -1;
+    if (b.value === "default") return 1;
+    return byPinyin(a, b);
+  });
+}
 
 function hasPenis(ctx: PayloadOptionContext): boolean {
   return ctx.payload.阴茎 === true;
@@ -58,8 +84,10 @@ function selectedTransformName(payload: CharacterPayload): string | undefined {
 function selectedTransform(ctx: PayloadOptionContext): [string, TransformEntry] | undefined {
   const name = selectedTransformName(ctx.payload);
   if (!name) return undefined;
+  const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
   return Object.entries(TRANSFORMS).find(
-    ([key, transform]) => key === name || transform.cnName === name,
+    ([key, transform]) =>
+      key === name || transform.cnName === name || transform.cnName === normalizedName,
   );
 }
 
@@ -101,7 +129,7 @@ function transformVariantOptions(transform: TransformEntry, partKeys: string[]):
       if (label) labels[base] ??= label;
     }
   }
-  return sortedByPinyin(
+  return defaultFirst(
     [...new Set(bases)].map((value) => ({
       value,
       label: labels[value] ?? value,
@@ -121,6 +149,10 @@ function transformPartOptions(field: string): (ctx: PayloadOptionContext) => Pay
   };
 }
 
+function hasMultipleTransformPartOptions(field: string): (ctx: PayloadOptionContext) => boolean {
+  return (ctx) => transformPartOptions(field)(ctx).length > 1;
+}
+
 function hasTransformPart(field: string): (ctx: PayloadOptionContext) => boolean {
   return (ctx) => {
     const found = selectedTransform(ctx);
@@ -128,6 +160,50 @@ function hasTransformPart(field: string): (ctx: PayloadOptionContext) => boolean
     const [, transform] = found;
     return Object.keys(transform.parts).some((partKey) => TRANSFORM_PART_FIELD[partKey] === field);
   };
+}
+
+function transformStateOptions(
+  prefix: "wings" | "tail",
+): (ctx: PayloadOptionContext) => PayloadListItem[] {
+  return (ctx) => {
+    const found = selectedTransform(ctx);
+    if (!found) return [];
+    const [, transform] = found;
+    return valuesToOptions(
+      TRANSFORM_STATES.filter((state) => transform.parts[`${prefix}-${state}`]?.length),
+    );
+  };
+}
+
+function hasDirectionalWingState(ctx: PayloadOptionContext): boolean {
+  const found = selectedTransform(ctx);
+  if (!found) return false;
+  const [, transform] = found;
+  return (transform.parts["wings-cover"] ?? []).some((variant) =>
+    /-(left|right)(?:-|$)/.test(variant),
+  );
+}
+
+function hasGlobalWingState(ctx: PayloadOptionContext): boolean {
+  if (hasDirectionalWingState(ctx)) return false;
+  return transformStateOptions("wings")(ctx).length > 1;
+}
+
+function hasSideWingState(ctx: PayloadOptionContext): boolean {
+  return hasDirectionalWingState(ctx);
+}
+
+function hasTailState(ctx: PayloadOptionContext): boolean {
+  const found = selectedTransform(ctx);
+  if (!found || found[0] === "fox") return false;
+  return transformStateOptions("tail")(ctx).length > 1;
+}
+
+function hasBirdFeathers(ctx: PayloadOptionContext): boolean {
+  const found = selectedTransform(ctx);
+  if (!found) return false;
+  const [key, transform] = found;
+  return key === "bird" && (transform.parts.feathers ?? []).length > 0;
 }
 
 function selectedClothing(payload: CharacterPayload, slot: SlotCn): ClothingWorn | undefined {
@@ -155,6 +231,38 @@ function clothingNameOptions(slot: SlotCn): PayloadListItem[] {
   );
 }
 
+function clothingColorItems(item: ClothingItem, field: "colorOptions" | "accColorOptions") {
+  const allowed = new Set(item[field] ?? []);
+  const colors = colorsData.clothes as ColorEntry[];
+  const matchedValues = new Set<string>();
+  const matchedOptions = colors
+    .filter((entry) => {
+      const matched =
+        allowed.has(entry.variable) || allowed.has(entry.name) || allowed.has(entry.cnName);
+      if (matched) {
+        matchedValues.add(entry.variable);
+        matchedValues.add(entry.name);
+        matchedValues.add(entry.cnName);
+      }
+      return matched;
+    })
+    .map((entry) => ({
+      value: entry.cnName,
+      label: entry.cnName,
+      meta: {
+        variable: entry.variable,
+        name: entry.name,
+      },
+    }));
+  const rawOptions = [...allowed]
+    .filter((value) => !matchedValues.has(value))
+    .map((value) => ({
+      value,
+      label: value,
+    }));
+  return sortedByPinyin([...matchedOptions, ...rawOptions]);
+}
+
 function clothingColorOptions(
   slot: SlotCn,
   field: "colorOptions" | "accColorOptions",
@@ -162,35 +270,17 @@ function clothingColorOptions(
   return (ctx) => {
     const item = selectedClothingItem(ctx, slot);
     if (!item) return [];
-    const allowed = new Set(item[field] ?? []);
-    const colors = colorsData.clothes as ColorEntry[];
-    const matchedValues = new Set<string>();
-    const matchedOptions = colors
-      .filter((entry) => {
-        const matched =
-          allowed.has(entry.variable) || allowed.has(entry.name) || allowed.has(entry.cnName);
-        if (matched) {
-          matchedValues.add(entry.variable);
-          matchedValues.add(entry.name);
-          matchedValues.add(entry.cnName);
-        }
-        return matched;
-      })
-      .map((entry) => ({
-        value: entry.cnName,
-        label: entry.cnName,
-        meta: {
-          variable: entry.variable,
-          name: entry.name,
-        },
-      }));
-    const rawOptions = [...allowed]
-      .filter((value) => !matchedValues.has(value))
-      .map((value) => ({
-        value,
-        label: value,
-      }));
-    return sortedByPinyin([...matchedOptions, ...rawOptions]);
+    return clothingColorItems(item, field);
+  };
+}
+
+function hasMultipleClothingColorOptions(
+  slot: SlotCn,
+  field: "colorOptions" | "accColorOptions",
+): (ctx: PayloadOptionContext) => boolean {
+  return (ctx) => {
+    const item = selectedClothingItem(ctx, slot);
+    return item ? clothingColorItems(item, field).length > 1 : false;
   };
 }
 
@@ -356,14 +446,14 @@ function clothingOptions(): PayloadOption[] {
         `${slotCn}主色调`,
         "clothing",
         clothingColorOptions(slotCn, "colorOptions"),
-        hasClothingOptions(slotCn, "colorOptions"),
+        hasMultipleClothingColorOptions(slotCn, "colorOptions"),
       ),
       listOption(
         `${prefix}.第二色调`,
         `${slotCn}第二色调`,
         "clothing",
         clothingColorOptions(slotCn, "accColorOptions"),
-        hasClothingOptions(slotCn, "accColorOptions"),
+        hasMultipleClothingColorOptions(slotCn, "accColorOptions"),
       ),
       listOption(
         `${prefix}.图案`,
@@ -414,7 +504,7 @@ function transformationOptions(): PayloadOption[] {
       `转化${label}`,
       "transformation",
       transformPartOptions(field),
-      hasTransformPart(field),
+      hasMultipleTransformPartOptions(field),
     );
 
   return [
@@ -424,28 +514,28 @@ function transformationOptions(): PayloadOption[] {
       "转化.细节.翅膀状态",
       "转化翅膀状态",
       "transformation",
-      rawValuesToOptions(["idle", "cover", "flaunt"]),
-      hasTransformPart("翅膀"),
+      transformStateOptions("wings"),
+      hasGlobalWingState,
     ),
     listOption(
       "转化.细节.左翅膀状态",
       "转化左翅膀状态",
       "transformation",
-      rawValuesToOptions(["idle", "cover"]),
-      hasTransformPart("翅膀"),
+      valuesToOptions(TRANSFORM_SIDE_STATES),
+      hasSideWingState,
     ),
     listOption(
       "转化.细节.右翅膀状态",
       "转化右翅膀状态",
       "transformation",
-      rawValuesToOptions(["idle", "cover"]),
-      hasTransformPart("翅膀"),
+      valuesToOptions(TRANSFORM_SIDE_STATES),
+      hasSideWingState,
     ),
     listOption(
       "转化.细节.翅膀层级",
       "转化翅膀层级",
       "transformation",
-      rawValuesToOptions(["前", "后"]),
+      valuesToOptions(["前", "后"]),
       hasTransformPart("翅膀"),
     ),
     detailOption("光环", "光环"),
@@ -455,39 +545,46 @@ function transformationOptions(): PayloadOption[] {
       "转化.细节.尾巴状态",
       "转化尾巴状态",
       "transformation",
-      rawValuesToOptions(["idle", "cover", "flaunt"]),
-      hasTransformPart("尾巴"),
+      transformStateOptions("tail"),
+      hasTailState,
     ),
     listOption(
       "转化.细节.尾巴层级",
       "转化尾巴层级",
       "transformation",
-      rawValuesToOptions(["前", "后"]),
+      valuesToOptions(["前", "后"]),
       hasTransformPart("尾巴"),
     ),
     detailOption("角", "角"),
+    listOption(
+      "转化.细节.角层级",
+      "转化角层级",
+      "transformation",
+      valuesToOptions(["后", "前"]),
+      hasTransformPart("角"),
+    ),
     detailOption("眼睛", "眼睛"),
     detailOption("脸颊", "脸颊"),
     listOption(
       "转化.细节.颊羽",
-      "转化颊羽",
+      "转化颊羽状态",
       "transformation",
-      rawValuesToOptions(["default"]),
-      (ctx) => selectedTransform(ctx)?.[0] === "bird",
+      valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS),
+      hasBirdFeathers,
     ),
     listOption(
       "转化.细节.覆羽",
-      "转化覆羽",
+      "转化覆羽状态",
       "transformation",
-      rawValuesToOptions(["default"]),
-      (ctx) => selectedTransform(ctx)?.[0] === "bird",
+      valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS),
+      hasBirdFeathers,
     ),
     listOption(
       "转化.细节.阴毛",
-      "转化阴毛",
+      "转化阴毛状态",
       "transformation",
-      rawValuesToOptions(["default"]),
-      (ctx) => selectedTransform(ctx)?.[0] === "bird",
+      valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS),
+      hasBirdFeathers,
     ),
   ];
 }

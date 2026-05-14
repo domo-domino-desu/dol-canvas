@@ -10,6 +10,7 @@ import {
   type SlotCn,
   type SlotDef,
 } from "@/character/render-catalog";
+import { findMaterialColor } from "@/character/material";
 
 export type MaskTarget =
   | "head"
@@ -83,6 +84,54 @@ function plainMaskSrc(
   return hasFile(item, stem) ? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png` : undefined;
 }
 
+function normalizeClothingColorValue(value: string): string {
+  return findMaterialColor("cloth", value)?.cnName ?? value;
+}
+
+function normalizedClothingColorOptions(
+  item: ClothingItem,
+  field: "colorOptions" | "accColorOptions",
+): string[] {
+  return [...new Set(item[field].map(normalizeClothingColorValue))];
+}
+
+function defaultClothingColor(options: string[]): string | undefined {
+  return (
+    options.find((value) => value === "default" || value === "默认") ??
+    options.find((value) => findMaterialColor("cloth", value)?.name === "default") ??
+    options[0]
+  );
+}
+
+function resolveClothingColor(
+  item: ClothingItem,
+  field: "colorOptions" | "accColorOptions",
+  payloadValue: string | undefined,
+): string | undefined {
+  const options = normalizedClothingColorOptions(item, field);
+  if (!options.length) return undefined;
+  if (options.length === 1) return options[0];
+
+  const normalizedPayloadValue = payloadValue
+    ? normalizeClothingColorValue(payloadValue)
+    : undefined;
+  if (normalizedPayloadValue && options.includes(normalizedPayloadValue)) {
+    return normalizedPayloadValue;
+  }
+
+  return defaultClothingColor(options);
+}
+
+function normalizeClothingWorn(worn: ClothingWorn, item: ClothingItem): ClothingWorn {
+  const 主色调 = resolveClothingColor(item, "colorOptions", worn.主色调);
+  const 第二色调 = resolveClothingColor(item, "accColorOptions", worn.第二色调);
+  return {
+    ...worn,
+    主色调,
+    第二色调,
+  };
+}
+
 function buildResolvedClothing(
   payload: CharacterPayload,
 ): Partial<Record<SlotCn, ResolvedClothing>> {
@@ -92,9 +141,10 @@ function buildResolvedClothing(
     if (!worn) continue;
     const item = findItem(slot.data, worn.名称);
     if (!item) continue;
+    const normalizedWorn = normalizeClothingWorn(worn, item);
     clothing[slot.cn] = {
       slot,
-      worn,
+      worn: normalizedWorn,
       item,
       tags: itemTags(slot.dir, item),
       flags: {

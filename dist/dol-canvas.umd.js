@@ -2105,7 +2105,7 @@
             }
             function withBrightness(filter, brightness) {
                 return {
-                    ...filter ?? {},
+                    ...filter,
                     brightness
                 };
             }
@@ -2445,6 +2445,9 @@
             function hasDirectionalVariants(variants) {
                 return variants.some((variant)=>/-(left|right)(?:-|$)/.test(variant));
             }
+            function sideWingState(value) {
+                return "cover" === value ? "cover" : "idle";
+            }
             function transformation_primaryHairColor(payload) {
                 return payload.发色详情?.头发?.发色 ?? payload.发色;
             }
@@ -2489,13 +2492,15 @@
                 return available.find((variant)=>variantBase(variant) === base && variant.includes(`-${side}`)) ?? available.find((variant)=>variant.includes(`-${side}`));
             }
             function prefixedVariant(available, prefix, hint) {
-                if (!hint) return;
+                if ("disabled" === hint || "hidden" === hint) return;
+                if (!hint) return available.find((variant)=>variant === `${prefix}-default`);
                 const target = "default" === hint ? `${prefix}-default` : hint;
                 return available.find((variant)=>variant === target) ?? available.find((variant)=>variant === `${prefix}-${target}`) ?? available.find((variant)=>variant.startsWith(`${prefix}-${hint}`));
             }
             function findTransform(name) {
                 if (!name) return;
-                const entry = Object.entries(transforms).find(([key, v])=>v.cnName === name || key === name);
+                const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
+                const entry = Object.entries(transforms).find(([key, v])=>v.cnName === name || key === name || v.cnName === normalizedName);
                 return entry;
             }
             function buildTransformLayers(state) {
@@ -2514,45 +2519,66 @@
                     耳朵: detail.耳朵,
                     尾巴: detail.尾巴,
                     角: detail.角,
+                    角层级: detail.角层级,
                     眼睛: detail.眼睛,
                     脸颊: detail.脸颊,
                     颊羽: detail.颊羽,
                     覆羽: detail.覆羽,
                     阴毛: detail.阴毛
                 };
-                function pushTransformLayer(partKey, variant, z) {
+                function pushTransformLayer(partKey, variant, z, extra) {
                     layers.push({
-                        id: `transform-${partKey}-${variant}`,
+                        id: `transform-${partKey}-${variant}${extra?.idSuffix ?? ""}`,
                         src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
                         z,
                         filter: filterForPart(dirName, partKey, payload),
-                        animation: transformation_BREATH
+                        animation: transformation_BREATH,
+                        maskSrcs: extra?.maskSrcs
                     });
                 }
                 function pushWings() {
                     const idleVariants = transform.parts["wings-idle"] ?? [];
-                    const requestedState = detail.翅膀状态 ?? "idle";
+                    const hasSideCover = hasDirectionalVariants(transform.parts["wings-cover"] ?? []);
+                    const requestedState = hasSideCover ? "idle" : detail.翅膀状态 ?? "idle";
                     const requestedPart = `wings-${requestedState}`;
                     const statePart = transform.parts[requestedPart] ? requestedPart : "wings-idle";
                     const globalState = statePart.replace("wings-", "");
                     const variants = transform.parts[statePart] ?? idleVariants;
                     if (!variants.length && !idleVariants.length) return;
                     const base = resolveVariant(idleVariants.length ? "wings-idle" : statePart, idleVariants.length ? idleVariants : variants, detailHints, transform.variantLabels?.[idleVariants.length ? "wings-idle" : statePart]);
-                    const layerZ = "cover" === globalState ? Z.TAIL_PENIS_COVER : "后" === detail.翅膀层级 ? Z.OVER_HEAD_BACK : Z.BACK_HAIR;
+                    const layerZ = "cover" === globalState || "flaunt" === globalState ? Z.TAIL_PENIS_COVER : "后" === detail.翅膀层级 ? Z.OVER_HEAD_BACK : Z.BACK_HAIR;
                     if ("idle" !== globalState && variants.length && !hasDirectionalVariants(variants)) {
                         const variant = variantForBase(variants, base);
                         if (variant) pushTransformLayer(statePart, variant, layerZ);
                         return;
                     }
-                    const leftState = detail.左翅膀状态 ?? ("cover" === globalState ? "cover" : "idle");
-                    const rightState = detail.右翅膀状态 ?? ("cover" === globalState ? "cover" : "idle");
-                    if (("idle" === leftState || "idle" === rightState) && idleVariants.length) {
+                    const leftState = sideWingState(detail.左翅膀状态 ?? ("cover" === globalState ? "cover" : "idle"));
+                    const rightState = sideWingState(detail.右翅膀状态 ?? ("cover" === globalState ? "cover" : "idle"));
+                    const idleZ = "后" === detail.翅膀层级 ? Z.OVER_HEAD_BACK : Z.BACK_HAIR;
+                    if (!hasSideCover && idleVariants.length) {
                         const idleVariant = variantForBase(idleVariants, base);
-                        if (idleVariant) pushTransformLayer("wings-idle", idleVariant, "后" === detail.翅膀层级 ? Z.OVER_HEAD_BACK : Z.BACK_HAIR);
+                        if (idleVariant) pushTransformLayer("wings-idle", idleVariant, idleZ);
                     }
                     const coverVariants = transform.parts["wings-cover"] ?? [];
                     if (!coverVariants.length) return;
                     const coverBase = resolveVariant("wings-cover", coverVariants, detailHints, transform.variantLabels?.["wings-cover"]);
+                    if (hasSideCover) {
+                        const idleVariant = variantForBase(idleVariants, base);
+                        if (idleVariant) {
+                            if ("idle" === leftState) pushTransformLayer("wings-idle", idleVariant, idleZ, {
+                                idSuffix: "-left",
+                                maskSrcs: [
+                                    `${b}face/masks/left.png`
+                                ]
+                            });
+                            if ("idle" === rightState) pushTransformLayer("wings-idle", idleVariant, idleZ, {
+                                idSuffix: "-right",
+                                maskSrcs: [
+                                    `${b}face/masks/right.png`
+                                ]
+                            });
+                        }
+                    }
                     if ("cover" === leftState) {
                         const variant = directionalVariantForBase(coverVariants, coverBase, "left");
                         if (variant) pushTransformLayer("wings-cover", variant, Z.TAIL_PENIS_COVER);
@@ -2563,7 +2589,7 @@
                     }
                 }
                 function pushTail() {
-                    const tailState = detail.尾巴状态 ?? "idle";
+                    const tailState = "fox" === dirName ? "idle" : detail.尾巴状态 ?? "idle";
                     const partKey = transform.parts[`tail-${tailState}`] ? `tail-${tailState}` : "tail-idle";
                     const variants = transform.parts[partKey] ?? [];
                     if (!variants.length) return;
@@ -2584,6 +2610,13 @@
                         const front = variants.find((v)=>v === `${variant}-front`) ?? variants.find((v)=>v.endsWith("-front"));
                         if (back) pushTransformLayer("halo", back, Z.OVER_HEAD_BACK);
                         if (front) pushTransformLayer("halo", front, Z.OLD_OVER_UPPER);
+                        continue;
+                    }
+                    if ("horns" === partKey) {
+                        const front = "前" === detail.角层级;
+                        pushTransformLayer("horns", variant, front ? Z.OVER_HEAD : Z.HORNS, {
+                            maskSrcs: front ? void 0 : state.masksFor("head")
+                        });
                         continue;
                     }
                     pushTransformLayer(partKey, variant, zDef.z);
@@ -2620,15 +2653,45 @@
             function plainMaskSrc(baseUrl, slotDir, item, stem = "mask") {
                 return hasFile(item, stem) ? `${baseUrl}clothes/${slotDir}/${item.name}/${stem}.png` : void 0;
             }
+            function normalizeClothingColorValue(value) {
+                return findMaterialColor("cloth", value)?.cnName ?? value;
+            }
+            function normalizedClothingColorOptions(item, field) {
+                return [
+                    ...new Set(item[field].map(normalizeClothingColorValue))
+                ];
+            }
+            function defaultClothingColor(options) {
+                return options.find((value)=>"default" === value || "默认" === value) ?? options.find((value)=>findMaterialColor("cloth", value)?.name === "default") ?? options[0];
+            }
+            function resolveClothingColor(item, field, payloadValue) {
+                const options = normalizedClothingColorOptions(item, field);
+                if (!options.length) return;
+                if (1 === options.length) return options[0];
+                const normalizedPayloadValue = payloadValue ? normalizeClothingColorValue(payloadValue) : void 0;
+                if (normalizedPayloadValue && options.includes(normalizedPayloadValue)) return normalizedPayloadValue;
+                return defaultClothingColor(options);
+            }
+            function normalizeClothingWorn(worn, item) {
+                const 主色调 = resolveClothingColor(item, "colorOptions", worn.主色调);
+                const 第二色调 = resolveClothingColor(item, "accColorOptions", worn.第二色调);
+                return {
+                    ...worn,
+                    主色调,
+                    第二色调
+                };
+            }
             function buildResolvedClothing(payload) {
                 const clothing = {};
                 for (const slot of SLOTS){
                     const worn = wornForSlot(payload, slot.cn);
                     if (!worn) continue;
                     const item = findItem(slot.data, worn.名称);
-                    if (item) clothing[slot.cn] = {
+                    if (!item) continue;
+                    const normalizedWorn = normalizeClothingWorn(worn, item);
+                    clothing[slot.cn] = {
                         slot,
-                        worn,
+                        worn: normalizedWorn,
                         item,
                         tags: itemTags(slot.dir, item),
                         flags: {
@@ -3574,6 +3637,42 @@
                 eyes: "眼睛",
                 cheeks: "脸颊"
             };
+            const TRANSFORM_STATES = [
+                "idle",
+                "cover",
+                "flaunt"
+            ];
+            const TRANSFORM_SIDE_STATES = [
+                "idle",
+                "cover"
+            ];
+            const TRANSFORM_PART_STATES = [
+                "default",
+                "hidden",
+                "disabled"
+            ];
+            const TRANSFORM_PART_STATE_LABELS = {
+                default: "默认",
+                hidden: "隐藏",
+                disabled: "关闭"
+            };
+            function valuesToOptions(values, labels) {
+                return [
+                    ...new Set(values)
+                ].map((value)=>({
+                        value,
+                        label: labels?.[value] ?? value
+                    }));
+            }
+            function defaultFirst(options) {
+                return [
+                    ...options
+                ].sort((a, b)=>{
+                    if ("default" === a.value) return -1;
+                    if ("default" === b.value) return 1;
+                    return byPinyin(a, b);
+                });
+            }
             function hasPenis(ctx) {
                 return true === ctx.payload.阴茎;
             }
@@ -3583,7 +3682,8 @@
             function selectedTransform(ctx) {
                 const name = selectedTransformName(ctx.payload);
                 if (!name) return;
-                return Object.entries(TRANSFORMS).find(([key, transform])=>key === name || transform.cnName === name);
+                const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
+                return Object.entries(TRANSFORMS).find(([key, transform])=>key === name || transform.cnName === name || transform.cnName === normalizedName);
             }
             function transformTypeOptions() {
                 const options = Object.entries(TRANSFORMS).map(([key, transform])=>({
@@ -3613,7 +3713,7 @@
                     const label = transform.variantLabels?.[partKey]?.[variant] ?? transform.variantLabels?.[partKey]?.[base];
                     if (label) labels[base] ??= label;
                 }
-                return sortedByPinyin([
+                return defaultFirst([
                     ...new Set(bases)
                 ].map((value)=>({
                         value,
@@ -3629,6 +3729,9 @@
                     return transformVariantOptions(transform, partKeys);
                 };
             }
+            function hasMultipleTransformPartOptions(field) {
+                return (ctx)=>transformPartOptions(field)(ctx).length > 1;
+            }
             function hasTransformPart(field) {
                 return (ctx)=>{
                     const found = selectedTransform(ctx);
@@ -3636,6 +3739,38 @@
                     const [, transform] = found;
                     return Object.keys(transform.parts).some((partKey)=>TRANSFORM_PART_FIELD[partKey] === field);
                 };
+            }
+            function transformStateOptions(prefix) {
+                return (ctx)=>{
+                    const found = selectedTransform(ctx);
+                    if (!found) return [];
+                    const [, transform] = found;
+                    return valuesToOptions(TRANSFORM_STATES.filter((state)=>transform.parts[`${prefix}-${state}`]?.length));
+                };
+            }
+            function hasDirectionalWingState(ctx) {
+                const found = selectedTransform(ctx);
+                if (!found) return false;
+                const [, transform] = found;
+                return (transform.parts["wings-cover"] ?? []).some((variant)=>/-(left|right)(?:-|$)/.test(variant));
+            }
+            function hasGlobalWingState(ctx) {
+                if (hasDirectionalWingState(ctx)) return false;
+                return transformStateOptions("wings")(ctx).length > 1;
+            }
+            function hasSideWingState(ctx) {
+                return hasDirectionalWingState(ctx);
+            }
+            function hasTailState(ctx) {
+                const found = selectedTransform(ctx);
+                if (!found || "fox" === found[0]) return false;
+                return transformStateOptions("tail")(ctx).length > 1;
+            }
+            function hasBirdFeathers(ctx) {
+                const found = selectedTransform(ctx);
+                if (!found) return false;
+                const [key, transform] = found;
+                return "bird" === key && (transform.parts.feathers ?? []).length > 0;
             }
             function selectedClothing(payload, slot) {
                 return payload.衣物?.[slot] ?? void 0;
@@ -3657,39 +3792,48 @@
                         }
                     })));
             }
+            function clothingColorItems(item, field) {
+                const allowed = new Set(item[field] ?? []);
+                const colors = colors_namespaceObject.clothes;
+                const matchedValues = new Set();
+                const matchedOptions = colors.filter((entry)=>{
+                    const matched = allowed.has(entry.variable) || allowed.has(entry.name) || allowed.has(entry.cnName);
+                    if (matched) {
+                        matchedValues.add(entry.variable);
+                        matchedValues.add(entry.name);
+                        matchedValues.add(entry.cnName);
+                    }
+                    return matched;
+                }).map((entry)=>({
+                        value: entry.cnName,
+                        label: entry.cnName,
+                        meta: {
+                            variable: entry.variable,
+                            name: entry.name
+                        }
+                    }));
+                const rawOptions = [
+                    ...allowed
+                ].filter((value)=>!matchedValues.has(value)).map((value)=>({
+                        value,
+                        label: value
+                    }));
+                return sortedByPinyin([
+                    ...matchedOptions,
+                    ...rawOptions
+                ]);
+            }
             function clothingColorOptions(slot, field) {
                 return (ctx)=>{
                     const item = selectedClothingItem(ctx, slot);
                     if (!item) return [];
-                    const allowed = new Set(item[field] ?? []);
-                    const colors = colors_namespaceObject.clothes;
-                    const matchedValues = new Set();
-                    const matchedOptions = colors.filter((entry)=>{
-                        const matched = allowed.has(entry.variable) || allowed.has(entry.name) || allowed.has(entry.cnName);
-                        if (matched) {
-                            matchedValues.add(entry.variable);
-                            matchedValues.add(entry.name);
-                            matchedValues.add(entry.cnName);
-                        }
-                        return matched;
-                    }).map((entry)=>({
-                            value: entry.cnName,
-                            label: entry.cnName,
-                            meta: {
-                                variable: entry.variable,
-                                name: entry.name
-                            }
-                        }));
-                    const rawOptions = [
-                        ...allowed
-                    ].filter((value)=>!matchedValues.has(value)).map((value)=>({
-                            value,
-                            label: value
-                        }));
-                    return sortedByPinyin([
-                        ...matchedOptions,
-                        ...rawOptions
-                    ]);
+                    return clothingColorItems(item, field);
+                };
+            }
+            function hasMultipleClothingColorOptions(slot, field) {
+                return (ctx)=>{
+                    const item = selectedClothingItem(ctx, slot);
+                    return item ? clothingColorItems(item, field).length > 1 : false;
                 };
             }
             function hasClothingOptions(slot, field) {
@@ -3819,8 +3963,8 @@
                     const prefix = `衣物.${slotCn}`;
                     return [
                         listOption(`${prefix}.名称`, `${slotCn}名称`, "clothing", clothingNameOptions(slotCn)),
-                        listOption(`${prefix}.主色调`, `${slotCn}主色调`, "clothing", clothingColorOptions(slotCn, "colorOptions"), hasClothingOptions(slotCn, "colorOptions")),
-                        listOption(`${prefix}.第二色调`, `${slotCn}第二色调`, "clothing", clothingColorOptions(slotCn, "accColorOptions"), hasClothingOptions(slotCn, "accColorOptions")),
+                        listOption(`${prefix}.主色调`, `${slotCn}主色调`, "clothing", clothingColorOptions(slotCn, "colorOptions"), hasMultipleClothingColorOptions(slotCn, "colorOptions")),
+                        listOption(`${prefix}.第二色调`, `${slotCn}第二色调`, "clothing", clothingColorOptions(slotCn, "accColorOptions"), hasMultipleClothingColorOptions(slotCn, "accColorOptions")),
                         listOption(`${prefix}.图案`, `${slotCn}图案`, "clothing", clothingPatternOptions(slotCn), hasClothingOptions(slotCn, "patternOptions")),
                         listOption(`${prefix}.花纹`, `${slotCn}花纹`, "clothing", clothingPatternOptions(slotCn), hasClothingOptions(slotCn, "patternOptions")),
                         listOption(`${prefix}.状态`, `${slotCn}状态`, "clothing", clothingStateOptions(slotCn), hasClothingOptions(slotCn, "states")),
@@ -3835,51 +3979,35 @@
                 });
             }
             function transformationOptions() {
-                const detailOption = (field, label)=>listOption(`转化.细节.${field}`, `转化${label}`, "transformation", transformPartOptions(field), hasTransformPart(field));
+                const detailOption = (field, label)=>listOption(`转化.细节.${field}`, `转化${label}`, "transformation", transformPartOptions(field), hasMultipleTransformPartOptions(field));
                 return [
                     listOption("转化", "转化", "transformation", transformTypeOptions()),
                     detailOption("翅膀", "翅膀"),
-                    listOption("转化.细节.翅膀状态", "转化翅膀状态", "transformation", rawValuesToOptions([
-                        "idle",
-                        "cover",
-                        "flaunt"
-                    ]), hasTransformPart("翅膀")),
-                    listOption("转化.细节.左翅膀状态", "转化左翅膀状态", "transformation", rawValuesToOptions([
-                        "idle",
-                        "cover"
-                    ]), hasTransformPart("翅膀")),
-                    listOption("转化.细节.右翅膀状态", "转化右翅膀状态", "transformation", rawValuesToOptions([
-                        "idle",
-                        "cover"
-                    ]), hasTransformPart("翅膀")),
-                    listOption("转化.细节.翅膀层级", "转化翅膀层级", "transformation", rawValuesToOptions([
+                    listOption("转化.细节.翅膀状态", "转化翅膀状态", "transformation", transformStateOptions("wings"), hasGlobalWingState),
+                    listOption("转化.细节.左翅膀状态", "转化左翅膀状态", "transformation", valuesToOptions(TRANSFORM_SIDE_STATES), hasSideWingState),
+                    listOption("转化.细节.右翅膀状态", "转化右翅膀状态", "transformation", valuesToOptions(TRANSFORM_SIDE_STATES), hasSideWingState),
+                    listOption("转化.细节.翅膀层级", "转化翅膀层级", "transformation", valuesToOptions([
                         "前",
                         "后"
                     ]), hasTransformPart("翅膀")),
                     detailOption("光环", "光环"),
                     detailOption("耳朵", "耳朵"),
                     detailOption("尾巴", "尾巴"),
-                    listOption("转化.细节.尾巴状态", "转化尾巴状态", "transformation", rawValuesToOptions([
-                        "idle",
-                        "cover",
-                        "flaunt"
-                    ]), hasTransformPart("尾巴")),
-                    listOption("转化.细节.尾巴层级", "转化尾巴层级", "transformation", rawValuesToOptions([
+                    listOption("转化.细节.尾巴状态", "转化尾巴状态", "transformation", transformStateOptions("tail"), hasTailState),
+                    listOption("转化.细节.尾巴层级", "转化尾巴层级", "transformation", valuesToOptions([
                         "前",
                         "后"
                     ]), hasTransformPart("尾巴")),
                     detailOption("角", "角"),
+                    listOption("转化.细节.角层级", "转化角层级", "transformation", valuesToOptions([
+                        "后",
+                        "前"
+                    ]), hasTransformPart("角")),
                     detailOption("眼睛", "眼睛"),
                     detailOption("脸颊", "脸颊"),
-                    listOption("转化.细节.颊羽", "转化颊羽", "transformation", rawValuesToOptions([
-                        "default"
-                    ]), (ctx)=>selectedTransform(ctx)?.[0] === "bird"),
-                    listOption("转化.细节.覆羽", "转化覆羽", "transformation", rawValuesToOptions([
-                        "default"
-                    ]), (ctx)=>selectedTransform(ctx)?.[0] === "bird"),
-                    listOption("转化.细节.阴毛", "转化阴毛", "transformation", rawValuesToOptions([
-                        "default"
-                    ]), (ctx)=>selectedTransform(ctx)?.[0] === "bird")
+                    listOption("转化.细节.颊羽", "转化颊羽状态", "transformation", valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS), hasBirdFeathers),
+                    listOption("转化.细节.覆羽", "转化覆羽状态", "transformation", valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS), hasBirdFeathers),
+                    listOption("转化.细节.阴毛", "转化阴毛状态", "transformation", valuesToOptions(TRANSFORM_PART_STATES, TRANSFORM_PART_STATE_LABELS), hasBirdFeathers)
                 ];
             }
             const payloadOptionsSchema = [

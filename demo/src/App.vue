@@ -384,7 +384,7 @@
                   </select>
                 </div>
 
-                <div class="field">
+                <div v-if="clothingColorOptions(slot.key).length" class="field">
                   <label :for="`${slot.key}-color`">主色调</label>
                   <select :id="`${slot.key}-color`" v-model="clothing[slot.key].color">
                     <option value="">默认</option>
@@ -399,7 +399,7 @@
                 </div>
               </div>
 
-              <div v-if="selectedClothing(slot.key)?.hasAcc" class="field">
+              <div v-if="accessoryColorOptions(slot.key).length" class="field">
                 <label :for="`${slot.key}-acc-color`">第二色调</label>
                 <select :id="`${slot.key}-acc-color`" v-model="clothing[slot.key].secondColor">
                   <option value="">默认</option>
@@ -435,17 +435,16 @@
             <label for="transform">类型</label>
             <select id="transform" v-model="transformType">
               <option value="">无</option>
-              <option v-for="item in transformOptions" :key="item.key" :value="item.cnName">
+              <option v-for="item in transformOptions" :key="item.value" :value="item.value">
                 {{ item.label }}
               </option>
             </select>
           </div>
 
-          <template v-if="currentTransform">
+          <template v-if="transformType">
             <div v-for="part in transformPartControls" :key="part.key" class="field">
               <label :for="`transform-${part.key}`">{{ part.label }}</label>
               <select :id="`transform-${part.key}`" v-model="transformDetails[part.field]">
-                <option value="">默认</option>
                 <option
                   v-for="variant in part.variants"
                   :key="variant.value"
@@ -484,7 +483,7 @@ import {
   faceData,
   hairData,
   i18nData,
-  transformationsData,
+  resolvePayloadOptions,
 } from "dol-canvas";
 
 const imgBases = {
@@ -519,6 +518,11 @@ type ClothingSelection = {
   rolled: boolean;
 };
 type TransformDetailField = keyof NonNullable<CharacterPayload["转化细节"]>;
+type PayloadListOption = Extract<
+  ReturnType<typeof resolvePayloadOptions>[number],
+  { type: "list" }
+>;
+type PayloadOption = ReturnType<typeof resolvePayloadOptions>[number];
 type CumKey = keyof NonNullable<CharacterPayload["精液"]>;
 type HairColorDetailState = {
   style: HairColorStyle;
@@ -538,7 +542,6 @@ const hairStyles = hairData.hairStyles;
 const fringeStyles = hairData.fringeStyles;
 const hairColors = colorsData.hair as ColorEntry[];
 const eyeColors = colorsData.eyes as ColorEntry[];
-const clothColors = colorsData.clothes as ColorEntry[];
 const condomColors = colorsData.condom as ColorEntry[];
 
 const bodyShape = ref<BodyShape>("经典");
@@ -650,13 +653,13 @@ const clothing = reactive(
 );
 
 clothing.upper.name = "连衣太阳裙";
-clothing.upper.color = "white";
+clothing.upper.color = "白色";
 clothing.lower.name = "连衣太阳裙";
-clothing.lower.color = "white";
+clothing.lower.color = "白色";
 clothing["under-lower"].name = "普通内裤";
-clothing["under-lower"].color = "pale white";
+clothing["under-lower"].color = "苍白色";
 clothing.head.name = "发卡";
-clothing.head.color = "white";
+clothing.head.color = "白色";
 clothing.feet.name = "校服鞋";
 clothing.legs.name = "女式运动袜";
 
@@ -673,6 +676,7 @@ const transformDetails = reactive<Record<TransformDetailField, string>>({
   尾巴状态: "",
   尾巴层级: "",
   角: "",
+  角层级: "",
   颊羽: "",
   覆羽: "",
   阴毛: "",
@@ -680,22 +684,6 @@ const transformDetails = reactive<Record<TransformDetailField, string>>({
   脸颊: "",
 });
 
-const transformOptions = computed(() =>
-  Object.entries(transformationsData).map(([key, value]) => ({
-    key,
-    cnName: value.cnName,
-    label: value.label ?? value.cnName,
-    parts: value.parts,
-    partLabels: value.partLabels ?? {},
-    variantLabels: value.variantLabels ?? {},
-  })),
-);
-
-const currentTransform = computed(() =>
-  transformOptions.value.find((item) => item.cnName === transformType.value),
-);
-
-type TransformOption = (typeof transformOptions.value)[number];
 type TransformControl = {
   key: string;
   field: TransformDetailField;
@@ -703,24 +691,9 @@ type TransformControl = {
   variants: Array<{ value: string; label: string }>;
 };
 
-const simplePartFieldMap: Record<string, { field: TransformDetailField; label: string }> = {
-  halo: { field: "光环", label: "光环" },
-  ears: { field: "耳朵", label: "耳朵" },
-  horns: { field: "角", label: "角" },
-  eyes: { field: "眼睛", label: "眼睛" },
-  cheeks: { field: "脸颊", label: "脸颊" },
-};
+const transformOptions = computed(() => listPayloadOption("转化")?.options ?? []);
 
-const wingStateLabels: Record<"idle" | "cover" | "flaunt", string> = {
-  idle: "不遮掩",
-  cover: "遮掩",
-  flaunt: "炫耀",
-};
-const layerLabels: Record<"前" | "后", string> = { 前: "前", 后: "后" };
-
-const transformPartControls = computed(() =>
-  currentTransform.value ? controlsForTransform(currentTransform.value) : [],
-);
+const transformPartControls = computed(() => controlsForTransformType(transformType.value));
 
 watch(transformType, () => resetTransformDetails(), { flush: "sync" });
 
@@ -728,34 +701,64 @@ const payloadSlotByKey = Object.fromEntries(
   Object.entries(slotLabels).map(([key, label]) => [label, key]),
 ) as Record<keyof NonNullable<CharacterPayload["衣物"]>, ClothingSlotKey>;
 
+function payloadOption(
+  key: string,
+  optionPayload: CharacterPayload = {},
+): PayloadOption | undefined {
+  return resolvePayloadOptions(optionPayload).find((option) => option.key === key);
+}
+
+function listPayloadOption(
+  key: string,
+  optionPayload: CharacterPayload = {},
+): PayloadListOption | undefined {
+  const option = payloadOption(key, optionPayload);
+  return option?.type === "list" ? option : undefined;
+}
+
 function selectedClothing(slotKey: ClothingSlotKey): ClothingItem | undefined {
   const selected = clothing[slotKey].name;
   return (clothesData[slotKey] as ClothingItem[]).find((item) => item.cnName === selected);
 }
 
-function clothingStates(slotKey: ClothingSlotKey): ClothingState[] {
-  return selectedClothing(slotKey)?.states.length ? selectedClothing(slotKey)!.states : ["full"];
+function selectedClothingPayload(slotKey: ClothingSlotKey): CharacterPayload {
+  const item = selectedClothing(slotKey);
+  return item ? clothingPayloadForItem(slotKey, item) : {};
 }
 
-function colorLabel(value: string): string {
-  const found = clothColors.find(
-    (color) => color.variable === value || color.name === value || color.cnName === value,
+function clothingPayloadForItem(slotKey: ClothingSlotKey, item: ClothingItem): CharacterPayload {
+  return { 衣物: { [slotLabels[slotKey]]: { 名称: item.cnName } } };
+}
+
+function clothingItemListOptions(
+  slotKey: ClothingSlotKey,
+  item: ClothingItem,
+  field: "状态" | "主色调" | "第二色调",
+) {
+  return (
+    listPayloadOption(`衣物.${slotLabels[slotKey]}.${field}`, clothingPayloadForItem(slotKey, item))
+      ?.options ?? []
   );
-  return found?.cnName ?? value;
+}
+
+function clothingListOptions(slotKey: ClothingSlotKey, field: "状态" | "主色调" | "第二色调") {
+  return (
+    listPayloadOption(`衣物.${slotLabels[slotKey]}.${field}`, selectedClothingPayload(slotKey))
+      ?.options ?? []
+  );
+}
+
+function clothingStates(slotKey: ClothingSlotKey): ClothingState[] {
+  const states = clothingListOptions(slotKey, "状态").map((option) => option.value);
+  return states.length ? (states as ClothingState[]) : ["full"];
 }
 
 function clothingColorOptions(slotKey: ClothingSlotKey) {
-  return (selectedClothing(slotKey)?.colorOptions ?? []).map((value) => ({
-    value,
-    label: colorLabel(value),
-  }));
+  return clothingListOptions(slotKey, "主色调");
 }
 
 function accessoryColorOptions(slotKey: ClothingSlotKey) {
-  return (selectedClothing(slotKey)?.accColorOptions ?? []).map((value) => ({
-    value,
-    label: colorLabel(value),
-  }));
+  return clothingListOptions(slotKey, "第二色调");
 }
 
 function hairColorDetailPayload(state: HairColorDetailState) {
@@ -775,199 +778,41 @@ function clothingBranchControls(slotKey: ClothingSlotKey) {
   ].filter((item): item is { key: "alternate" | "hoodDown" | "rolled"; label: string } => !!item);
 }
 
-function transformVariantBase(variant: string): string {
-  return variant.replace(/-(back|front)$/, "").replace(/-(left|right)(?=-|$)/, "");
+function transformControlLabel(option: PayloadListOption): string {
+  return option.label.replace(/^转化/, "");
 }
 
-function uniqueTransformVariants(variants: string[]): string[] {
-  return [...new Set(variants.map(transformVariantBase))];
+function controlsForTransformType(type: string): TransformControl[] {
+  if (!type) return [];
+  return resolvePayloadOptions({ 转化: { 类型: type } })
+    .filter(
+      (option): option is PayloadListOption =>
+        option.type === "list" && option.key.startsWith("转化.细节."),
+    )
+    .map((option) => ({
+      key: option.key,
+      field: option.key.replace("转化.细节.", "") as TransformDetailField,
+      label: transformControlLabel(option),
+      variants: option.options.map((variant) => ({
+        value: variant.value,
+        label: variant.label,
+      })),
+    }));
 }
 
-function normalizeTransformVariants(part: string, variants: string[]): string[] {
-  if (part === "halo" || part.startsWith("wings-")) return uniqueTransformVariants(variants);
-  return variants;
-}
-
-function transformVariantLabel(
-  labels: Record<string, string> | undefined,
-  variant: string,
-): string {
+function defaultTransformControlValue(control: TransformControl): string {
   return (
-    labels?.[variant] ??
-    Object.entries(labels ?? {}).find(([key]) => transformVariantBase(key) === variant)?.[1] ??
-    variant
+    control.variants.find((variant) => variant.value === "default" || variant.value === "默认")
+      ?.value ??
+    control.variants.find((variant) => variant.value === "idle")?.value ??
+    control.variants[0]?.value ??
+    ""
   );
 }
 
-function stateOptions<T extends string>(
-  values: readonly T[],
-  labels: Record<string, string>,
-): Array<{ value: T; label: string }> {
-  return values.map((value) => ({ value, label: labels[value] }));
-}
-
-function hasDirectionalCover(transform: TransformOption): boolean {
-  return (transform.parts["wings-cover"] ?? []).some((variant) =>
-    /-(left|right)(?:-|$)/.test(variant),
-  );
-}
-
-function variantControl(
-  transform: TransformOption,
-  part: string,
-  field: TransformDetailField,
-  label: string,
-): TransformControl | undefined {
-  const variants = transform.parts[part];
-  if (!variants?.length) return undefined;
-  return {
-    key: `${part}-${field}`,
-    field,
-    label,
-    variants: normalizeTransformVariants(part, variants).map((variant) => ({
-      value: variant,
-      label: transformVariantLabel(transform.variantLabels[part], variant),
-    })),
-  };
-}
-
-function addWingControls(transform: TransformOption, controls: TransformControl[]): void {
-  const basePart = transform.parts["wings-idle"]
-    ? "wings-idle"
-    : transform.parts["wings-cover"]
-      ? "wings-cover"
-      : transform.parts["wings-flaunt"]
-        ? "wings-flaunt"
-        : undefined;
-  if (!basePart) return;
-
-  const styleControl = variantControl(
-    transform,
-    basePart,
-    "翅膀",
-    transform.partLabels[basePart] ?? "翅膀",
-  );
-  if (styleControl) controls.push(styleControl);
-
-  const wingStates = (["idle", "cover", "flaunt"] as const).filter(
-    (state) => transform.parts[`wings-${state}`]?.length,
-  );
-  if (wingStates.length > 1) {
-    controls.push({
-      key: "wings-state",
-      field: "翅膀状态",
-      label: "翅膀状态",
-      variants: stateOptions(wingStates, wingStateLabels),
-    });
-  }
-
-  if (!hasDirectionalCover(transform)) return;
-  controls.push(
-    {
-      key: "left-wing-state",
-      field: "左翅膀状态",
-      label: "左翅膀",
-      variants: stateOptions(["idle", "cover"], wingStateLabels),
-    },
-    {
-      key: "right-wing-state",
-      field: "右翅膀状态",
-      label: "右翅膀",
-      variants: stateOptions(["idle", "cover"], wingStateLabels),
-    },
-    {
-      key: "wings-layer",
-      field: "翅膀层级",
-      label: "翅膀层级",
-      variants: stateOptions(["前", "后"], layerLabels),
-    },
-  );
-}
-
-function addTailControls(transform: TransformOption, controls: TransformControl[]): void {
-  const basePart = transform.parts["tail-idle"]
-    ? "tail-idle"
-    : transform.parts["tail-cover"]
-      ? "tail-cover"
-      : transform.parts["tail-flaunt"]
-        ? "tail-flaunt"
-        : undefined;
-  if (!basePart) return;
-
-  const styleControl = variantControl(
-    transform,
-    basePart,
-    "尾巴",
-    transform.partLabels[basePart] ?? "尾巴",
-  );
-  if (styleControl) controls.push(styleControl);
-
-  const tailStates = (["idle", "cover", "flaunt"] as const).filter(
-    (state) => transform.parts[`tail-${state}`]?.length,
-  );
-  if (tailStates.length > 1) {
-    controls.push({
-      key: "tail-state",
-      field: "尾巴状态",
-      label: "尾巴状态",
-      variants: stateOptions(tailStates, wingStateLabels),
-    });
-  }
-
-  if (transform.parts["tail-idle"]?.length) {
-    controls.push({
-      key: "tail-layer",
-      field: "尾巴层级",
-      label: "尾巴层级",
-      variants: stateOptions(["前", "后"], layerLabels),
-    });
-  }
-}
-
-function addBirdFeatherControls(transform: TransformOption, controls: TransformControl[]): void {
-  const variants = transform.parts.feathers ?? [];
-  if (!variants.length) return;
-  const featherControls = [
-    { prefix: "malar", field: "颊羽" as const, label: "颊羽" },
-    { prefix: "plumage", field: "覆羽" as const, label: "覆羽" },
-    { prefix: "pubes", field: "阴毛" as const, label: "阴毛" },
-  ];
-  for (const { prefix, field, label } of featherControls) {
-    const prefixed = variants.filter((variant) => variant.startsWith(`${prefix}-`));
-    if (!prefixed.length) continue;
-    controls.push({
-      key: `feathers-${prefix}`,
-      field,
-      label,
-      variants: prefixed.map((variant) => {
-        const value = variant.slice(prefix.length + 1);
-        return {
-          value,
-          label: transformVariantLabel(transform.variantLabels.feathers, variant),
-        };
-      }),
-    });
-  }
-}
-
-function controlsForTransform(transform: TransformOption): TransformControl[] {
-  const controls: TransformControl[] = [];
-
-  addWingControls(transform, controls);
-  addTailControls(transform, controls);
-
-  for (const [part, meta] of Object.entries(simplePartFieldMap)) {
-    const control = variantControl(
-      transform,
-      part,
-      meta.field,
-      transform.partLabels[part] ?? meta.label,
-    );
-    if (control) controls.push(control);
-  }
-
-  if (transform.key === "bird") addBirdFeatherControls(transform, controls);
-  return controls;
+function validTransformControlValue(control: TransformControl, value: string | undefined): string {
+  if (value && control.variants.some((variant) => variant.value === value)) return value;
+  return defaultTransformControlValue(control);
 }
 
 function randomInt(min: number, max: number): number {
@@ -995,8 +840,12 @@ function randomClothingPayload(nextBreasts: number): NonNullable<CharacterPayloa
     if (!slot.items.length || !chance(wearRate)) continue;
     const item = pick(slot.items);
     const hints = item.branchHints ?? {};
-    const primaryColor = randomClothColor(item.colorOptions);
-    const secondaryColor = item.hasAcc ? randomClothColor(item.accColorOptions) : undefined;
+    const primaryColor = randomClothColor(
+      clothingItemListOptions(slot.key, item, "主色调").map((option) => option.value),
+    );
+    const secondaryColor = randomClothColor(
+      clothingItemListOptions(slot.key, item, "第二色调").map((option) => option.value),
+    );
     result[slot.label] = {
       名称: item.cnName,
       耐久度: item.states.length ? pick(item.states) : "full",
@@ -1017,14 +866,14 @@ function randomTransformPayload(): Pick<CharacterPayload, "转化"> {
 
   const transform = pick(transformOptions.value);
   const details: NonNullable<CharacterPayload["转化细节"]> = {};
-  for (const control of controlsForTransform(transform)) {
+  for (const control of controlsForTransformType(transform.value)) {
     if (!control.variants.length || chance(0.35)) continue;
     details[control.field] = pick(control.variants).value;
   }
 
   return {
     转化: {
-      类型: transform.cnName,
+      类型: transform.value,
       细节: details,
     },
   };
@@ -1124,12 +973,19 @@ function clothingPayload() {
     const item = selectedClothing(slot.key);
     if (!item) continue;
 
+    const selectedColor = clothing[slot.key].color;
+    const selectedSecondColor = clothing[slot.key].secondColor;
+    const primaryOptions = new Set(clothingColorOptions(slot.key).map((option) => option.value));
+    const secondaryOptions = new Set(accessoryColorOptions(slot.key).map((option) => option.value));
+
     result[slot.label] = {
       名称: item.cnName,
       耐久度: clothing[slot.key].state,
       胸部层级: breasts.value,
-      ...(clothing[slot.key].color ? { 主色调: clothing[slot.key].color } : {}),
-      ...(clothing[slot.key].secondColor ? { 第二色调: clothing[slot.key].secondColor } : {}),
+      ...(selectedColor && primaryOptions.has(selectedColor) ? { 主色调: selectedColor } : {}),
+      ...(selectedSecondColor && secondaryOptions.has(selectedSecondColor)
+        ? { 第二色调: selectedSecondColor }
+        : {}),
       ...(clothing[slot.key].alternate ? { 替代: true } : {}),
       ...(clothing[slot.key].hoodDown ? { 兜帽: "放下" as const } : {}),
       ...(clothing[slot.key].rolled ? { 卷袖: true } : {}),
@@ -1154,13 +1010,15 @@ function resetTransformDetails(): void {
   for (const key of Object.keys(transformDetails) as TransformDetailField[]) {
     transformDetails[key] = "";
   }
+  for (const control of transformPartControls.value) {
+    transformDetails[control.field] = defaultTransformControlValue(control);
+  }
 }
 
 function assignTransformDetails(detail: CharacterPayload["转化细节"] | undefined): void {
   resetTransformDetails();
-  if (!detail) return;
-  for (const key of Object.keys(transformDetails) as TransformDetailField[]) {
-    transformDetails[key] = detail[key] ?? "";
+  for (const control of transformPartControls.value) {
+    transformDetails[control.field] = validTransformControlValue(control, detail?.[control.field]);
   }
 }
 
@@ -1334,7 +1192,15 @@ const payload = computed<CharacterPayload>(() => ({
         转化: {
           类型: transformType.value,
           细节: Object.fromEntries(
-            Object.entries(transformDetails).filter(([, value]) => value),
+            transformPartControls.value
+              .map(
+                (control) =>
+                  [
+                    control.field,
+                    validTransformControlValue(control, transformDetails[control.field]),
+                  ] as const,
+              )
+              .filter(([, value]) => value),
           ) as CharacterPayload["转化细节"],
         },
       }

@@ -32,6 +32,7 @@ const COPIES: CopyEntry[] = [
   { src: "hair/fringe/", dest: "hair/fringe/" },
   { src: "hair/hair/", dest: "hair/hair/" },
   { src: "face/default/", dest: "face/default/" },
+  { src: "face/masks/", dest: "face/masks/" },
   { src: "transformations/", dest: "transformations/" },
   { src: "clothes/upper/", dest: "clothes/upper/" },
   { src: "clothes/belly/", dest: "clothes/belly/" },

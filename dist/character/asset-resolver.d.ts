@@ -20,4 +20,3 @@ export declare function backStem(worn: ClothingWorn, item: ClothingItem, acc?: b
 export declare function clothingMaskSrc(state: ResolvedState, slotDir: string, item: ClothingItem, worn: ClothingWorn): string | undefined;
 export declare function availableStem(item: ClothingItem, stems: Array<string | undefined>): string | undefined;
 export declare function slotAccessoryStem(slotCn: SlotCn, resolved: ResolvedClothing): string;
-Clothing): string;

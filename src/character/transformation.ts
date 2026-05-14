@@ -28,6 +28,7 @@ type TransformDetailHints = {
   耳朵?: string;
   尾巴?: string;
   角?: string;
+  角层级?: string;
   眼睛?: string;
   脸颊?: string;
   颊羽?: string;
@@ -41,6 +42,10 @@ function variantBase(variant: string): string {
 
 function hasDirectionalVariants(variants: string[]): boolean {
   return variants.some((variant) => /-(left|right)(?:-|$)/.test(variant));
+}
+
+function sideWingState(value: string | undefined): "idle" | "cover" {
+  return value === "cover" ? "cover" : "idle";
 }
 
 function primaryHairColor(payload: ResolvedState["payload"]): string | undefined {
@@ -134,7 +139,8 @@ function prefixedVariant(
   prefix: "malar" | "plumage" | "pubes",
   hint: string | undefined,
 ): string | undefined {
-  if (!hint) return undefined;
+  if (hint === "disabled" || hint === "hidden") return undefined;
+  if (!hint) return available.find((variant) => variant === `${prefix}-default`);
   const target = hint === "default" ? `${prefix}-default` : hint;
   return (
     available.find((variant) => variant === target) ??
@@ -146,7 +152,10 @@ function prefixedVariant(
 // Find a transform entry by CN name
 function findTransform(name?: string): [string, TransformEntry] | undefined {
   if (!name) return undefined;
-  const entry = Object.entries(transforms).find(([key, v]) => v.cnName === name || key === name);
+  const normalizedName = name.endsWith("化") ? name.slice(0, -1) : name;
+  const entry = Object.entries(transforms).find(
+    ([key, v]) => v.cnName === name || key === name || v.cnName === normalizedName,
+  );
   return entry;
 }
 
@@ -172,6 +181,7 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
     耳朵: detail.耳朵,
     尾巴: detail.尾巴,
     角: detail.角,
+    角层级: detail.角层级,
     眼睛: detail.眼睛,
     脸颊: detail.脸颊,
     颊羽: detail.颊羽,
@@ -179,19 +189,26 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
     阴毛: detail.阴毛,
   };
 
-  function pushTransformLayer(partKey: string, variant: string, z: number): void {
+  function pushTransformLayer(
+    partKey: string,
+    variant: string,
+    z: number,
+    extra?: { idSuffix?: string; maskSrcs?: string[] },
+  ): void {
     layers.push({
-      id: `transform-${partKey}-${variant}`,
+      id: `transform-${partKey}-${variant}${extra?.idSuffix ?? ""}`,
       src: `${b}transformations/${dirName}/${partKey}/${variant}.png`,
       z,
       filter: filterForPart(dirName, partKey, payload),
       animation: BREATH,
+      maskSrcs: extra?.maskSrcs,
     });
   }
 
   function pushWings(): void {
     const idleVariants = transform.parts["wings-idle"] ?? [];
-    const requestedState = detail.翅膀状态 ?? "idle";
+    const hasSideCover = hasDirectionalVariants(transform.parts["wings-cover"] ?? []);
+    const requestedState = hasSideCover ? "idle" : (detail.翅膀状态 ?? "idle");
     const requestedPart = `wings-${requestedState}`;
     const statePart = transform.parts[requestedPart] ? requestedPart : "wings-idle";
     const globalState = statePart.replace("wings-", "") as "idle" | "cover" | "flaunt";
@@ -205,7 +222,7 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
       transform.variantLabels?.[idleVariants.length ? "wings-idle" : statePart],
     );
     const layerZ =
-      globalState === "cover"
+      globalState === "cover" || globalState === "flaunt"
         ? Z.TAIL_PENIS_COVER
         : detail.翅膀层级 === "后"
           ? Z.OVER_HEAD_BACK
@@ -217,18 +234,18 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
       return;
     }
 
-    const leftState = detail.左翅膀状态 ?? (globalState === "cover" ? "cover" : "idle");
-    const rightState = detail.右翅膀状态 ?? (globalState === "cover" ? "cover" : "idle");
+    const leftState = sideWingState(
+      detail.左翅膀状态 ?? (globalState === "cover" ? "cover" : "idle"),
+    );
+    const rightState = sideWingState(
+      detail.右翅膀状态 ?? (globalState === "cover" ? "cover" : "idle"),
+    );
 
-    if ((leftState === "idle" || rightState === "idle") && idleVariants.length) {
+    const idleZ = detail.翅膀层级 === "后" ? Z.OVER_HEAD_BACK : Z.BACK_HAIR;
+
+    if (!hasSideCover && idleVariants.length) {
       const idleVariant = variantForBase(idleVariants, base);
-      if (idleVariant) {
-        pushTransformLayer(
-          "wings-idle",
-          idleVariant,
-          detail.翅膀层级 === "后" ? Z.OVER_HEAD_BACK : Z.BACK_HAIR,
-        );
-      }
+      if (idleVariant) pushTransformLayer("wings-idle", idleVariant, idleZ);
     }
 
     const coverVariants = transform.parts["wings-cover"] ?? [];
@@ -239,6 +256,23 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
       detailHints,
       transform.variantLabels?.["wings-cover"],
     );
+    if (hasSideCover) {
+      const idleVariant = variantForBase(idleVariants, base);
+      if (idleVariant) {
+        if (leftState === "idle") {
+          pushTransformLayer("wings-idle", idleVariant, idleZ, {
+            idSuffix: "-left",
+            maskSrcs: [`${b}face/masks/left.png`],
+          });
+        }
+        if (rightState === "idle") {
+          pushTransformLayer("wings-idle", idleVariant, idleZ, {
+            idSuffix: "-right",
+            maskSrcs: [`${b}face/masks/right.png`],
+          });
+        }
+      }
+    }
     if (leftState === "cover") {
       const variant = directionalVariantForBase(coverVariants, coverBase, "left");
       if (variant) pushTransformLayer("wings-cover", variant, Z.TAIL_PENIS_COVER);
@@ -250,7 +284,7 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
   }
 
   function pushTail(): void {
-    const tailState = detail.尾巴状态 ?? "idle";
+    const tailState = dirName === "fox" ? "idle" : (detail.尾巴状态 ?? "idle");
     const partKey = transform.parts[`tail-${tailState}`] ? `tail-${tailState}` : "tail-idle";
     const variants = transform.parts[partKey] ?? [];
     if (!variants.length) return;
@@ -288,6 +322,14 @@ export function buildTransformLayers(state: ResolvedState): LayerSpec[] {
         variants.find((v) => v.endsWith("-front"));
       if (back) pushTransformLayer("halo", back, Z.OVER_HEAD_BACK);
       if (front) pushTransformLayer("halo", front, Z.OLD_OVER_UPPER);
+      continue;
+    }
+
+    if (partKey === "horns") {
+      const front = detail.角层级 === "前";
+      pushTransformLayer("horns", variant, front ? Z.OVER_HEAD : Z.HORNS, {
+        maskSrcs: front ? undefined : state.masksFor("head"),
+      });
       continue;
     }
 
